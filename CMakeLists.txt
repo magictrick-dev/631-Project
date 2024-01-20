@@ -18,6 +18,11 @@ endif (WIN32)
 
 add_executable(j5
     "./source/main.cpp"
+    "./source/core.h"
+    "./source/core/definitions.h"
+    "./source/core/primitives.h"
+    "./source/window.h"
+    "./source/window.cpp"
 )
 
 target_include_directories(j5 PUBLIC
