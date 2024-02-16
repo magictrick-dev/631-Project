@@ -243,9 +243,84 @@ window_initialize_startup(void)
 
 }
 
+bool
+window_process_updates()
+{
+
+    if (ghost_thread_state->windows_active <= 0)
+        return false;
+
+    MSG current_message = {};
+    while (PeekMessage(&current_message, 0, 0, 0, PM_REMOVE))
+    {
+
+        if (current_message.message == UD_UPDATE_WINDOW)
+        {
+
+            
+
+        }
+
+    }
+
+}
+
 j5win
 window_create(const char *window_name, u32 width, u32 height)
 {
+
+    WNDCLASSEXW display_window_class    = {};
+    display_window_class.cbSize         = sizeof(display_window_class);
+    display_window_class.lpfnWndProc    = &wDisplayWindowProc;
+    display_window_class.hInstance      = GetModuleHandleW(NULL);
+    display_window_class.hIcon          = LoadIconA(NULL, IDI_APPLICATION);
+    display_window_class.hCursor        = LoadCursorA(NULL, IDC_ARROW);
+    display_window_class.hbrBackground  = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    display_window_class.lpszClassName  = L"displayWindowClass";
+    RegisterClassExW(&display_window_class);
+
+    // Calculate our window size from the requested client area, which are different
+    // sizes since Windows doesn't like to make things intuitive and easy to understand.
+    RECT client_rect = {};
+    client_rect.right = width;
+    client_rect.bottom = height;
+    AdjustWindowRect(&client_rect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    // Definitely not the actual client area size.
+    i32 window_width = client_rect.right - client_rect.left;
+    i32 window_height = client_rect.bottom - client_rect.top;
+
+    // Establish our creation context.
+    window_creation_context context = {};
+    context.ex_style            = 0;
+    context.class_name          = display_window_class.lpszClassName;
+    context.window_name         = L"J5 Window";
+    context.style               = WS_OVERLAPPEDWINDOW;
+    context.x                   = CW_USEDEFAULT;
+    context.y                   = CW_USEDEFAULT;
+    context.width               = window_width;
+    context.height              = window_height;
+    context.instance            = display_window_class.hInstance;
+
+    HWND display_window_handle = (HWND)SendMessageW(ghost_window->window_handle,
+            UD_CREATE_WINDOW, (WPARAM)&context, 0);
+    if (display_window_handle == NULL)
+        return NULL;
+
+    // Since the CreateWindowExW expects a wide-char title but this creation function
+    // is a standard 8-bit character string, we need to manually update the title
+    // using the ansi version to match the requested title.
+    SetWindowTextA(display_window_handle, window_title);
+
+    // Now we just need to show the window.
+    ShowWindow(display_window_handle, SW_SHOWNORMAL);
+
+    // Finally, give the handle back to the user.
+    window_state *window_state = (window_state*)malloc(sizeof(window_state));
+    window_state->handle = display_window_handle;
+    window_state->width = width;
+    window_state->height = height;
+    return (j5_window)window_state;
 
 }
 
@@ -253,4 +328,9 @@ void
 window_close(j5win *window_handle)
 {
 
+    // Emits back to the ghost window to close the window. This procedure is async and
+    // may not happen immediately.
+    SendMessageW(ghost_thread_state->ghost_window, UD_DESTROY_WINDOW,
+            (WPARAM)&(((window_state*)window)->handle), 0);
+    
 }

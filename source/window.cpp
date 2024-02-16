@@ -16,6 +16,14 @@
 // The ghost window basically generates windows for the main thread. See the comment
 // in window_create(...) for the reasoning why.
 //
+// In order to fix the general issue with messages being passed back to main and
+// properly differentiate which window received what, we can snuggle the message
+// context as a message in the message. Message-ception. We define a new message
+// called UD_WINDOW_EVENT in which we define (WPARAM) as the associated pointer
+// to the window state and the (LPARAM) as a pointer to message for the window.
+//
+// Which messages are processed, these are scanned, and then can differentiated.
+//
 
 // Our special little event functions.
 #define UD_CREATE_WINDOW    (WM_USER + 0x0042)
