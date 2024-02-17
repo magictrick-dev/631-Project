@@ -23,6 +23,8 @@ add_executable(j5
     "./source/core/primitives.h"
     "./source/window.h"
     "./source/window.cpp"
+    "./source/window/window_handler.h"
+    "./source/window/window_handler.cpp"
 )
 
 target_include_directories(j5 PUBLIC

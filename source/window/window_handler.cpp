@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <window/window_handler.h>
+#include <cstdlib>
+#include <cstdio>
 
 struct window_state
 {
@@ -36,6 +38,13 @@ struct window_creation_context
     LPVOID      user_parameter;
 };
 
+struct window_message
+{
+    UINT    message;
+    WPARAM  w_param;
+    LPARAM  l_param;
+};
+
 #define J5_WINDOW_CAST(handle) (window_state *)handle
 
 #define UD_CREATE_WINDOW    (WM_USER + 0x0042)
@@ -53,13 +62,20 @@ wDisplayWindowProc(HWND window, UINT message, WPARAM w_param, LPARAM l_param)
 
     LRESULT ret_result = 0;   
 
-    // Essentially, our window procedure catches the messages and then forwards
-    // them off as a thread message to our runtime thread, effectively making it
-    // non-blocking since the message can be sent and allow the window procedure
-    // to keep going.
     switch (message)
     {
         
+        // We need to attach our window user parameter to window long so we
+        // can easily access it when messages are called.
+        case WM_CREATE:
+        {
+            
+            CREATESTRUCT *window_create = (CREATESTRUCT*)l_param;
+            LPVOID window_user_parameter = window_create->lpCreateParams;
+            SetWindowLongPtrW(window, GWLP_USERDATA, (LONG_PTR)window_user_parameter);
+            break;
+        }
+
         // For close, we simply just smuggle the window handle with w_param.
         case WM_CLOSE:
         {
@@ -68,11 +84,17 @@ wDisplayWindowProc(HWND window, UINT message, WPARAM w_param, LPARAM l_param)
         };
 
         // For all other messages that we want to process, we just send it over.
-        // TODO(Chris): We need to pack these messages with the window handle so
-        // that we know what messages correspond to what window.
+        // They are sent as UD_UPDATE_WINDOW messages, packed with the original
+        // message and the window it came from.
+        case WM_SIZE:
+        case WM_CHAR:
         case WM_DESTROY:
         {
-            PostThreadMessageW(main_thread_id, message, w_param, l_param);
+            window_message *current_message = (window_message *)malloc(sizeof(window_message));
+            current_message->message = message;
+            current_message->w_param = w_param;
+            current_message->l_param = l_param;
+            PostThreadMessageW(main_thread_id, UD_UPDATE_WINDOW, (WPARAM)current_message, (LPARAM)window);
             break;
         };
 
@@ -108,7 +130,7 @@ wGhostWindowProc(HWND window, UINT message, WPARAM w_param, LPARAM l_param)
 
             // The result can be packed as a LRESULT, which is kinda neat.
             if (window_handle != NULL)
-                ghost_thread_state->active_windows++;
+                ghost_thread_state->windows_active++;
             ret_result = (LRESULT)window_handle;
             break;
 
@@ -119,7 +141,7 @@ wGhostWindowProc(HWND window, UINT message, WPARAM w_param, LPARAM l_param)
 
             // A request to destroy the window is made.
             if (DestroyWindow((HWND)w_param))
-                ghost_thread_state->active_windows--;
+                ghost_thread_state->windows_active--;
 
             break;
 
@@ -161,20 +183,20 @@ window_ghost_main(LPVOID user_param)
     HWND ghost_window_handle = CreateWindowExW(0, ghost_window_class.lpszClassName,
             L"Ghost Window", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
             0, 0, ghost_window_class.hInstance, 0);
-    ghost_window_state->ghost_window = ghost_window_handle;
+    ghost_thread_state->ghost_window = ghost_window_handle;
     
     // Signals back to the main thread after sync that it is valid, otherwise, it asserts.
     if (ghost_window_handle)
-        ghost_window->ghost_thread_ready = true;
+        ghost_thread_state->ghost_thread_ready = true;
     else
         ExitProcess(1);
 
     // This signals back to the main thread that the ghost window thread's is done
     // doing its essential set up.
-    SetEvent(ghost_window->ghost_thread_sync);
+    SetEvent(ghost_thread_state->ghost_thread_sync);
 
     // This is the message pump that the windows all forward out.
-    while(ghost_window->ghost_thread_runtime)
+    while(ghost_thread_state->ghost_thread_runtime)
     {
 
         MSG current_message = {};
@@ -186,8 +208,12 @@ window_ghost_main(LPVOID user_param)
             (current_message.message == WM_QUIT) ||
             (current_message.message == WM_SIZE))
         {
-            PostThreadMessageW(main_thread_id, current_message.message,
-                    current_message.wParam, current_message.lParam);
+            window_message *pass_message = (window_message *)malloc(sizeof(window_message));
+            pass_message->message = current_message.message;
+            pass_message->w_param = current_message.wParam;
+            pass_message->l_param = current_message.lParam;
+            PostThreadMessageW(main_thread_id, UD_UPDATE_WINDOW, (WPARAM)pass_message,
+                    (LPARAM)current_message.hwnd);
         }
         else
         {
@@ -255,13 +281,24 @@ window_process_updates()
     {
 
         if (current_message.message == UD_UPDATE_WINDOW)
-        {
+        {           
 
-            
+            HWND specified_window = (HWND)current_message.lParam;
+            window_message *message = (window_message *)current_message.wParam;
+            window_state *window = (window_state*)GetWindowLongPtr(specified_window, GWLP_USERDATA);
+
+            if (message->message == WM_SIZE)
+            {
+                printf("Resizing.\n");
+            }
+
+            free(message);
 
         }
 
     }
+
+    return true;
 
 }
 
@@ -290,6 +327,10 @@ window_create(const char *window_name, u32 width, u32 height)
     i32 window_width = client_rect.right - client_rect.left;
     i32 window_height = client_rect.bottom - client_rect.top;
 
+    // Create our window state.
+    //window_state *window_state = (window_state*)(malloc(sizeof(window_state)));
+    window_state *window = (window_state*)malloc(sizeof(window_state));
+
     // Establish our creation context.
     window_creation_context context = {};
     context.ex_style            = 0;
@@ -301,26 +342,29 @@ window_create(const char *window_name, u32 width, u32 height)
     context.width               = window_width;
     context.height              = window_height;
     context.instance            = display_window_class.hInstance;
+    context.user_parameter      = (LPVOID)window;
 
-    HWND display_window_handle = (HWND)SendMessageW(ghost_window->window_handle,
+    HWND display_window_handle = (HWND)SendMessageW(ghost_thread_state->ghost_window,
             UD_CREATE_WINDOW, (WPARAM)&context, 0);
     if (display_window_handle == NULL)
+    {
+        free(window);
         return NULL;
+    }
 
     // Since the CreateWindowExW expects a wide-char title but this creation function
     // is a standard 8-bit character string, we need to manually update the title
     // using the ansi version to match the requested title.
-    SetWindowTextA(display_window_handle, window_title);
+    SetWindowTextA(display_window_handle, window_name);
 
     // Now we just need to show the window.
     ShowWindow(display_window_handle, SW_SHOWNORMAL);
 
     // Finally, give the handle back to the user.
-    window_state *window_state = (window_state*)malloc(sizeof(window_state));
-    window_state->handle = display_window_handle;
-    window_state->width = width;
-    window_state->height = height;
-    return (j5_window)window_state;
+    window->handle = display_window_handle;
+    window->width = width;
+    window->height = height;
+    return (j5win)window;
 
 }
 
@@ -331,6 +375,6 @@ window_close(j5win *window_handle)
     // Emits back to the ghost window to close the window. This procedure is async and
     // may not happen immediately.
     SendMessageW(ghost_thread_state->ghost_window, UD_DESTROY_WINDOW,
-            (WPARAM)&(((window_state*)window)->handle), 0);
+            (WPARAM)&(((window_state*)window_handle)->handle), 0);
     
 }
