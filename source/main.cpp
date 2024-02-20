@@ -166,6 +166,15 @@ main(int argc, char ** argv)
     }
 #endif
 
+    v2 a = { 1.0f, 2.0f };
+    v2 b = { 3.0f, 4.0f };
+    v2 c = a;
+    c = c + a;
+
+    std::cout << a.x << " " << a.y << std::endl;
+    std::cout << b.x << " " << b.y << std::endl;
+    std::cout << c.x << " " << c.y << std::endl;
+
     // Okay, now we can process the operations.
     rdview_source_run(&current_configuration);
 

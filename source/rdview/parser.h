@@ -12,6 +12,11 @@
 #define RDVIEW_OPTYPE_POINT      9
 #define RDVIEW_OPTYPE_LINE      10
 
+#define RDVIEW_DRAW_TYPE_OUTPUT  0
+#define RDVIEW_DRAW_TYPE_SINGLE  0
+#define RDVIEW_DRAW_TYPE_DOUBLE  1
+#define RDVIEW_DRAW_TYPE_STEP    2
+
 struct rdview_operation
 {
     u32     type;
@@ -50,8 +55,8 @@ struct rdview_configuration
     struct
     {
         char    display_name[80];
-        bool    double_buffered;
-
+        
+        u32     device_draw_method;
         u32     device_type;
         i32     device_width;
         i32     device_height;

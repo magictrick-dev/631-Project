@@ -225,11 +225,15 @@ rdview_source_parse(rdview_configuration *config, const char *buffer)
         {
             if (mode == "rgbsingle")
             {
-                config->state.double_buffered = false;
+                config->state.device_draw_method = RDVIEW_DRAW_TYPE_SINGLE;
             }
             else if (mode == "rgbdouble")
             {
-                config->state.double_buffered = true;
+                config->state.device_draw_method = RDVIEW_DRAW_TYPE_DOUBLE;
+            }
+            else if (mode == "rgbobject")
+            {
+                config->state.device_draw_method = RDVIEW_DRAW_TYPE_STEP;
             }
             else
             {
@@ -243,7 +247,7 @@ rdview_source_parse(rdview_configuration *config, const char *buffer)
         {
             if (mode == "rgb")
             {
-                config->state.double_buffered = false;
+                config->state.device_draw_method = RDVIEW_DRAW_TYPE_OUTPUT;
             }
             else
             {
