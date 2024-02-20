@@ -18,13 +18,18 @@ endif (WIN32)
 
 add_executable(j5
     "./source/main.cpp"
+    "./source/window.h"
+    "./source/window.cpp"
+
     "./source/core.h"
     "./source/core/definitions.h"
     "./source/core/primitives.h"
-    "./source/window.h"
-    "./source/window.cpp"
-    "./source/window/window_handler.h"
-    "./source/window/window_handler.cpp"
+
+    "./source/renderer/renderer.h"
+    "./source/renderer/renderer.cpp"
+
+    "./source/rdview/parser.h"
+    "./source/rdview/parser.cpp"
 )
 
 target_include_directories(j5 PUBLIC
