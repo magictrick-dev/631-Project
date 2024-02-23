@@ -156,7 +156,7 @@ main(int argc, char ** argv)
     state->handle       = window_handle;
     state->device       = GetDC(window_handle);
 
-#if 1
+#if 0
     // Test the set pixel function.
     for (i32 y = 0; y < request_height; ++y)
     {

@@ -453,6 +453,58 @@ rdview_source_parse(rdview_configuration *config, const char *buffer)
 
         }
 
+        else if (current_line[0] == "Circle")
+        {
+            
+            // Validate that point is correctly formated.
+            if (current_line.size() != 5)
+            {
+                std::cout   << "Error while parsing rdview file:\n"
+                            << "    Circle doesn't contain the current number of arguments." << std::endl;
+                return false;
+            }
+
+            // Bump the current operation.
+            current_operation->next_operation = (rdview_operation*)malloc(sizeof(rdview_operation));
+            current_operation = current_operation->next_operation;
+            current_operation->next_operation = NULL;
+            current_operation->type = RDVIEW_OPTYPE_CIRCLE;
+
+            // Set the operands.
+            rdview_circle *circle = (rdview_circle*)malloc(sizeof(rdview_circle));
+            circle->x = std::stoi(current_line[1]);
+            circle->y = std::stoi(current_line[2]);
+            circle->z = std::stoi(current_line[3]);
+            circle->r = std::stoi(current_line[4]);
+            current_operation->operands = circle;
+        }
+
+        else if (current_line[0] == "Fill")
+        {
+
+            // Validate that point is correctly formated.
+            if (current_line.size() != 4)
+            {
+                std::cout   << "Error while parsing rdview file:\n"
+                            << "    Fill doesn't contain the current number of arguments." << std::endl;
+                return false;
+            }
+
+            // Bump the current operation.
+            current_operation->next_operation = (rdview_operation*)malloc(sizeof(rdview_operation));
+            current_operation = current_operation->next_operation;
+            current_operation->next_operation = NULL;
+            current_operation->type = RDVIEW_OPTYPE_FLOOD;
+
+            // Set the operands.
+            rdview_flood *flood = (rdview_flood*)malloc(sizeof(rdview_flood));
+            flood->x = std::stoi(current_line[1]);
+            flood->y = std::stoi(current_line[2]);
+            flood->z = std::stoi(current_line[3]);
+            current_operation->operands = flood;
+
+        }
+
         else
         {
             std::cout   << "Warning while parsing rdview file:\n"
@@ -494,6 +546,20 @@ rdview_source_run(rdview_configuration *config)
             rdview_line *line = (rdview_line*)current_op->operands;
             set_line(line->x1, line->x2, line->y1, line->y2, line->z1, line->z2,
                     config->draw_color);
+
+        }
+
+        // Circle.
+        else if (current_op->type == RDVIEW_OPTYPE_CIRCLE)
+        {
+            rdview_circle *circle = (rdview_circle*)current_op->operands;
+            set_circle(circle->x, circle->y, circle->z, circle->r, config->draw_color);
+        }
+
+        else if (current_op->type == RDVIEW_OPTYPE_FLOOD)
+        {
+            rdview_flood *flood= (rdview_flood*)current_op->operands;
+            set_flood(flood->x, flood->y, flood->z, config->draw_color);
 
         }
 

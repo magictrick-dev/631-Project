@@ -11,6 +11,8 @@
 #define RDVIEW_OPTYPE_CANVAS     2
 #define RDVIEW_OPTYPE_POINT      9
 #define RDVIEW_OPTYPE_LINE      10
+#define RDVIEW_OPTYPE_CIRCLE    11
+#define RDVIEW_OPTYPE_FLOOD     12
 
 #define RDVIEW_DRAW_TYPE_OUTPUT  0
 #define RDVIEW_DRAW_TYPE_SINGLE  0
@@ -49,6 +51,21 @@ struct rdview_line
     i32 z2;
 };
 
+struct rdview_circle
+{
+    i32 x;
+    i32 y;
+    i32 z;
+    i32 r;
+};
+
+struct rdview_flood
+{
+    i32 x;
+    i32 y;
+    i32 z;
+};
+
 struct rdview_configuration
 {
 
@@ -73,35 +90,5 @@ char*   rdview_source_fetch(const char *file_path);
 void    rdview_source_free(char *buffer);
 bool    rdview_source_parse(rdview_configuration *config, const char *buffer);
 void    rdview_source_run(rdview_configuration *config);
-
-class rdview_operation
-{
-    public:
-        virtual void run(void) = NULL;
-};
-
-class rdview_point : public rdview_operation
-{
-    public:
-        inline rdview_point(v3 location);
-
-    public:
-        inline virtual void run(void);
-
-    protected:
-        v3 _where;
-};
-
-rdview_point::
-rdview_point(v3 location)
-{
-    this->_where = location;
-}
-
-inline void rdview_point::
-run(void)
-{
-    
-}
 
 #endif
