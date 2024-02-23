@@ -9,6 +9,7 @@
 // file as the first parameter.
 //
 #include <windows.h>
+#include <iostream>
 #include <cstdio>
 
 #include <core.h>
@@ -155,25 +156,16 @@ main(int argc, char ** argv)
     state->handle       = window_handle;
     state->device       = GetDC(window_handle);
 
-#if 0
+#if 1
     // Test the set pixel function.
     for (i32 y = 0; y < request_height; ++y)
     {
         for (i32 x = 0; x < request_width; ++x)
         {
-            set_pixel(x, y, (f32)x / request_width, (f32)y / request_height, 0.0f);
+            set_pixel(x, y, { (f32)x / request_width, (f32)y / request_height, 0.0f });
         }
     }
 #endif
-
-    v2 a = { 1.0f, 2.0f };
-    v2 b = { 3.0f, 4.0f };
-    v2 c = a;
-    c = c + a;
-
-    std::cout << a.x << " " << a.y << std::endl;
-    std::cout << b.x << " " << b.y << std::endl;
-    std::cout << c.x << " " << c.y << std::endl;
 
     // Okay, now we can process the operations.
     rdview_source_run(&current_configuration);

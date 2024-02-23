@@ -29,22 +29,38 @@ struct v2
 
     };
 
-    // --- Addition Operations -------------------------------------------------
-
-    inline v2& operator+(const v2& rhs);
+    inline v2& operator+=(const v2& rhs);
+    inline v2& operator*=(const f32& rhs);
 
 };
 
-v2& v2::
-operator+(const v2& rhs)
+inline v2& v2::
+operator*=(const f32& rhs)
+{
+    this->x *= rhs;
+    this->y *= rhs;
+    return *this;
+}
+
+inline v2& v2::
+operator+=(const v2& rhs)
 {
     this->x += rhs.x;
     this->y += rhs.y;
-    return (*this);
-};
+    return *this;
+}
 
 inline v2
-operator+(const v2& rhs, const v2& lhs)
+operator*(const v2& lhs, const f32& rhs)
+{
+    v2 res = lhs;
+    res.x *= rhs;
+    res.y *= rhs;
+    return res;
+}
+
+inline v2
+operator+(const v2& lhs, const v2& rhs)
 {
     v2 res = {};
     res.x = lhs.x + rhs.x;
@@ -88,7 +104,52 @@ struct v3
 
     };
 
+    inline v3& operator+=(const v3& rhs);
+    inline v3& operator*=(const f32& rhs);
+
 };
+
+inline v3& v3::
+operator*=(const f32& rhs)
+{
+    this->x *= rhs;
+    this->y *= rhs;
+    this->z *= rhs;
+    return *this;
+}
+
+inline v3& v3::
+operator+=(const v3& rhs)
+{
+    this->x += rhs.x;
+    this->y += rhs.y;
+    this->z += rhs.z;
+    return *this;
+}
+
+inline v3
+operator*(const v3& lhs, const f32& rhs)
+{
+    v3 res = lhs;
+    res.x *= rhs;
+    res.y *= rhs;
+    res.z *= rhs;
+    return res;
+}
+
+inline v3
+operator+(const v3& lhs, const v3& rhs)
+{
+    v3 res = {};
+    res.x = lhs.x + rhs.x;
+    res.y = lhs.y + rhs.y;
+    res.z = lhs.z + rhs.z;
+    return res;
+};
+
+
+
+
 
 struct v4
 {
@@ -146,6 +207,51 @@ struct v4
 
     };
 
+    inline v4& operator+=(const v4& rhs);
+    inline v4& operator*=(const f32& rhs);
+
+};
+
+inline v4& v4::
+operator*=(const f32& rhs)
+{
+    this->x *= rhs;
+    this->y *= rhs;
+    this->z *= rhs;
+    this->w *= rhs;
+    return *this;
+}
+
+inline v4& v4::
+operator+=(const v4& rhs)
+{
+    this->x += rhs.x;
+    this->y += rhs.y;
+    this->z += rhs.z;
+    this->w += rhs.w;
+    return *this;
+}
+
+inline v4
+operator*(const v4& lhs, const f32& rhs)
+{
+    v4 res = lhs;
+    res.x *= rhs;
+    res.y *= rhs;
+    res.z *= rhs;
+    res.w *= rhs;
+    return res;
+}
+
+inline v4
+operator+(const v4& lhs, const v4& rhs)
+{
+    v4 res = {};
+    res.x = lhs.x + rhs.x;
+    res.y = lhs.y + rhs.y;
+    res.z = lhs.z + rhs.z;
+    res.w = lhs.w + rhs.w;
+    return res;
 };
 
 #endif

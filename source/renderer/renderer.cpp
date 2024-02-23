@@ -19,14 +19,14 @@ set_in_window_noop(i32 x, i32 y, HDC device, COLORREF& ref)
 }
 
 void
-set_pixel(i32 x, i32 y, f32 r, f32 g, f32 b)
+set_pixel(i32 x, i32 y, v3 color)
 {
 
-    u8 red          = (u8)(255.0f * r);   
-    u8 green        = (u8)(255.0f * g);   
-    u8 blue         = (u8)(255.0f * b);
+    u8 red          = (u8)(255.0f * color.r);   
+    u8 green        = (u8)(255.0f * color.g);   
+    u8 blue         = (u8)(255.0f * color.b);
 
-    COLORREF color  = RGB(red, green, blue);
+    COLORREF cref = RGB(red, green, blue);
 
     window_state *window = get_window_state();
 
@@ -48,19 +48,19 @@ set_pixel(i32 x, i32 y, f32 r, f32 g, f32 b)
     u32 bounded = ((bounds_left | bounds_top | bounds_right | bounds_bottom) >> 31);
 
     static set_in_window_fptr setfps[2] { set_in_window, set_in_window_noop };
-    setfps[bounded](x, y, window->device, color);
+    setfps[bounded](x, y, window->device, cref);
 
 }
 
 void
-set_fill(f32 r, f32 g, f32 b)
+set_fill(v3 color)
 {
 
-    u8 red          = (u8)(255.0f * r);   
-    u8 green        = (u8)(255.0f * g);   
-    u8 blue         = (u8)(255.0f * b);
+    u8 red          = (u8)(255.0f * color.r);   
+    u8 green        = (u8)(255.0f * color.g);   
+    u8 blue         = (u8)(255.0f * color.b);
 
-    COLORREF color  = RGB(red, green, blue);
+    COLORREF cref = RGB(red, green, blue);
 
     BITMAPINFO info = {};
     info.bmiHeader.biSize           = sizeof(BITMAPINFO);
@@ -71,7 +71,7 @@ set_fill(f32 r, f32 g, f32 b)
     info.bmiHeader.biCompression    = 0;
     info.bmiHeader.biSizeImage      = 0;
 
-    u32 fill_pixel = (u32)color;
+    u32 fill_pixel = (u32)cref;
     window_state *window = get_window_state();
 
     int ret = StretchDIBits(window->device, 0, 0, window->width, window->height,
@@ -80,7 +80,7 @@ set_fill(f32 r, f32 g, f32 b)
 }
 
 void
-set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, f32 r, f32 g, f32 b)
+set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
 {
 
     // Brehsenham's line algorithm.
@@ -105,7 +105,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, f32 r, f32 g, f32 b)
             // X1 < X2 (left to right)
             for (i32 x = x1; x < x2; ++x)
             {
-                set_pixel(x, y, r, g, b);
+                set_pixel(x, y, color);
                 if (p > 0)
                 {
                     y += sub;
@@ -123,7 +123,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, f32 r, f32 g, f32 b)
             // X1 < X2 (left to right)
             for (i32 x = x1; x >= x2; --x)
             {
-                set_pixel(x, y, r, g, b);
+                set_pixel(x, y, color);
                 if (p > 0)
                 {
                     y += sub;
@@ -156,7 +156,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, f32 r, f32 g, f32 b)
             // X1 < X2 (left to right)
             for (i32 y = y1; y < y2; ++y)
             {
-                set_pixel(x, y, r, g, b);
+                set_pixel(x, y, color);
                 if (p > 0)
                 {
                     x += sub;
@@ -174,7 +174,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, f32 r, f32 g, f32 b)
             // X1 < X2 (left to right)
             for (i32 y = y1; y >= y2; --y)
             {
-                set_pixel(x, y, r, g, b);
+                set_pixel(x, y, color);
                 if (p > 0)
                 {
                     x += sub;

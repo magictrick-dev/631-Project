@@ -62,19 +62,8 @@ struct rdview_configuration
         i32     device_height;
     } state;
 
-    struct
-    {
-        f32 red;
-        f32 green;
-        f32 blue;
-    } draw_color;
-
-    struct
-    {
-        f32 red;
-        f32 green;
-        f32 blue;
-    } canvas_color;
+    v3 draw_color;
+    v3 canvas_color;
 
     rdview_operation *operation_list;
 
@@ -84,5 +73,35 @@ char*   rdview_source_fetch(const char *file_path);
 void    rdview_source_free(char *buffer);
 bool    rdview_source_parse(rdview_configuration *config, const char *buffer);
 void    rdview_source_run(rdview_configuration *config);
+
+class rdview_operation
+{
+    public:
+        virtual void run(void) = NULL;
+};
+
+class rdview_point : public rdview_operation
+{
+    public:
+        inline rdview_point(v3 location);
+
+    public:
+        inline virtual void run(void);
+
+    protected:
+        v3 _where;
+};
+
+rdview_point::
+rdview_point(v3 location)
+{
+    this->_where = location;
+}
+
+inline void rdview_point::
+run(void)
+{
+    
+}
 
 #endif

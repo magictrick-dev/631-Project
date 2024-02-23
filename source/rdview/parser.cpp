@@ -483,8 +483,7 @@ rdview_source_run(rdview_configuration *config)
         {
 
             rdview_point *point = (rdview_point*)current_op->operands;
-            set_pixel(point->x, point->y, config->draw_color.red,
-                    config->draw_color.green, config->draw_color.blue);
+            set_pixel(point->x, point->y, config->draw_color);
 
         }
 
@@ -494,7 +493,7 @@ rdview_source_run(rdview_configuration *config)
     
             rdview_line *line = (rdview_line*)current_op->operands;
             set_line(line->x1, line->x2, line->y1, line->y2, line->z1, line->z2,
-                    config->draw_color.red, config->draw_color.green, config->draw_color.blue);
+                    config->draw_color);
 
         }
 
@@ -504,9 +503,7 @@ rdview_source_run(rdview_configuration *config)
             
             rdview_color *color = (rdview_color*)current_op->operands;
             config->canvas_color = { color->r, color->g, color->b };
-            set_fill(config->canvas_color.red,
-                     config->canvas_color.green,
-                     config->canvas_color.blue);
+            set_fill(config->canvas_color);
 
         }
 
