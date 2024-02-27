@@ -4,9 +4,9 @@ A graphics engine built entirely from scratch, pixel-by-pixel.
 
 ### Documentation
 
-None yet.
+In order to build the project, run `cmake -B ./build`, and to compile it,
+run `cmake --build ./build`. Needs MSVC to work. (Thanks Microsoft, very cool!)
 
-### Building
+Invoke with `j5.exe [rdfile]`.
 
-None yet.
-
+Example: `./bin/Debug/j5.exe rdviews/s03.rd` will run the line example.

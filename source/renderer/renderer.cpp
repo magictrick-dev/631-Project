@@ -25,7 +25,7 @@
 //      Not to be confused with flood_fill(), set_fill() essentially overwrites
 //      the entire device's pixel buffer with a single color.
 //
-
+#if 0
 typedef void (*set_in_window_fptr)(i32, i32, HDC, COLORREF&);
 
 static inline void
@@ -110,6 +110,21 @@ get_pixel(i32 x, i32 y, u32 *color)
     *color = (u32)pixel;
 
 }
+#endif
+
+// --- Genereal Set Fill -------------------------------------------------------
+void
+set_fill(renderable_device *device, v3 color)
+{
+    device->set_fill(color);
+}
+
+// --- General Point Set -------------------------------------------------------
+void
+set_point(renderable_device *device, i32 x, i32 y, i32 z, v3 color)
+{
+    device->set_pixel(x, y, z, color);
+}
 
 // --- Bresenham's Line Algorithm ----------------------------------------------
 //
@@ -117,7 +132,7 @@ get_pixel(i32 x, i32 y, u32 *color)
 //
 
 void
-set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
+set_line(renderable_device *device, i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
 {
 
     // Brehsenham's line algorithm.
@@ -142,7 +157,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
             // X1 < X2 (left to right)
             for (i32 x = x1; x <= x2; ++x)
             {
-                set_pixel(x, y, color);
+                device->set_pixel(x, y, z1, color);
                 if (p > 0)
                 {
                     y += sub;
@@ -160,7 +175,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
             // X1 < X2 (left to right)
             for (i32 x = x1; x >= x2; --x)
             {
-                set_pixel(x, y, color);
+                device->set_pixel(x, y, z1, color);
                 if (p > 0)
                 {
                     y += sub;
@@ -193,7 +208,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
             // X1 < X2 (left to right)
             for (i32 y = y1; y <= y2; ++y)
             {
-                set_pixel(x, y, color);
+                device->set_pixel(x, y, z1, color);
                 if (p > 0)
                 {
                     x += sub;
@@ -211,7 +226,7 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
             // X1 < X2 (left to right)
             for (i32 y = y1; y >= y2; --y)
             {
-                set_pixel(x, y, color);
+                device->set_pixel(x, y, z1, color);
                 if (p > 0)
                 {
                     x += sub;
@@ -235,21 +250,21 @@ set_line(i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 z2, v3 color)
 //
 
 inline static void
-set_circle_pixels(i32 x, i32 y, i32 xo, i32 yo, v3 color)
+set_circle_pixels(renderable_device *device, i32 x, i32 y, i32 xo, i32 yo, i32 z, v3 color)
 {
-    set_pixel(xo + x, yo + y, color);
-    set_pixel(xo - x, yo + y, color);
-    set_pixel(xo + x, yo - y, color);
-    set_pixel(xo - x, yo - y, color);
+    device->set_pixel(xo + x, yo + y, z, color);
+    device->set_pixel(xo - x, yo + y, z, color);
+    device->set_pixel(xo + x, yo - y, z, color);
+    device->set_pixel(xo - x, yo - y, z, color);
 
-    set_pixel(xo + y, yo + x, color);
-    set_pixel(xo - y, yo + x, color);
-    set_pixel(xo + y, yo - x, color);
-    set_pixel(xo - y, yo - x, color);
+    device->set_pixel(xo + y, yo + x, z, color);
+    device->set_pixel(xo - y, yo + x, z, color);
+    device->set_pixel(xo + y, yo - x, z, color);
+    device->set_pixel(xo - y, yo - x, z, color);
 }
 
 void
-set_circle(i32 x_offset, i32 y_offset, i32 z_offset, i32 radius, v3 color)
+set_circle(renderable_device *device, i32 x_offset, i32 y_offset, i32 z_offset, i32 radius, v3 color)
 {
 
     i32 x = 0;
@@ -259,7 +274,7 @@ set_circle(i32 x_offset, i32 y_offset, i32 z_offset, i32 radius, v3 color)
     while (x <= y)
     {
 
-        set_circle_pixels(x, y, x_offset, y_offset, color);
+        set_circle_pixels(device, x, y, x_offset, y_offset, z_offset, color);
         x++;
 
         if (p > 0)
@@ -283,13 +298,11 @@ set_circle(i32 x_offset, i32 y_offset, i32 z_offset, i32 radius, v3 color)
 //
 
 inline static bool
-find_span(i32 *x_start, i32 *x_end, i32 y, u32 seed)
+find_span(renderable_device *device, i32 *x_start, i32 *x_end, i32 y, u32 seed)
 {
 
-    window_state *window = get_window_state();
     
-    u32 current_pixel = 0;
-    get_pixel(*x_start, y, &current_pixel);
+    u32 current_pixel = device->get_pixel(*x_start, y, 0);
     if (current_pixel != seed)
         return false;
     
@@ -297,15 +310,15 @@ find_span(i32 *x_start, i32 *x_end, i32 y, u32 seed)
 
     while (current_pixel == seed && *x_start >= 0)
     {
-        get_pixel(--(*x_start), y, &current_pixel);
+        current_pixel = device->get_pixel(--(*x_start), y, 0);
     }
 
     (*x_start)++;
 
-    get_pixel(*x_end, y, &current_pixel);
-    while (current_pixel == seed && *x_end <= window->width)
+    current_pixel = device->get_pixel(*x_end, y, 0);
+    while (current_pixel == seed && *x_end <= device->width)
     {
-        get_pixel(++(*x_end), y, &current_pixel);
+        current_pixel = device->get_pixel(++(*x_end), y, 0);
     }
 
     return true;
@@ -313,41 +326,40 @@ find_span(i32 *x_start, i32 *x_end, i32 y, u32 seed)
 }
 
 inline static void
-fill_span(i32 x_start, i32 x_end, i32 y, v3 color)
+fill_span(renderable_device *device, i32 x_start, i32 x_end, i32 y, v3 color)
 {
 
     for (i32 x = x_start; x < x_end; ++x)
-        set_pixel(x, y, color);
+        device->set_pixel(x, y, 0, color);
 
 }
 
 inline static void
-fff4(i32 x_start, i32 x_end, i32 y, u32 seed, v3 color)
+fff4(renderable_device *device, i32 x_start, i32 x_end, i32 y, u32 seed, v3 color)
 {
 
-    window_state *window = get_window_state();
-    if (x_start >= window->width)
+    if (x_start >= device->width)
         return;
     if (x_end < 0)
         return;
     if (y < 0)
         return;
-    if (y >= window->height)
+    if (y >= device->height)
         return;
 
-    if (find_span(&x_start, &x_end, y, seed))
+    if (find_span(device, &x_start, &x_end, y, seed))
     {
-        fill_span(x_start, x_end, y, color);
+        fill_span(device, x_start, x_end, y, color);
 
         i32 new_xs = x_start;
         i32 new_xe = x_start;
         for (; new_xs < x_end; new_xs = new_xe)
         {
-            if (y + 1 >= window->height)
+            if (y + 1 >= device->height)
                 return;
-            if (find_span(&new_xs, &new_xe, y + 1, seed))
+            if (find_span(device, &new_xs, &new_xe, y + 1, seed))
             {
-                fff4(new_xs, new_xe, y + 1, seed, color);
+                fff4(device, new_xs, new_xe, y + 1, seed, color);
             }
             else
             {
@@ -361,9 +373,9 @@ fff4(i32 x_start, i32 x_end, i32 y, u32 seed, v3 color)
         {
             if (y - 1 < 0)
                 return;
-            if (find_span(&new_xs, &new_xe, y - 1, seed))
+            if (find_span(device, &new_xs, &new_xe, y - 1, seed))
             {
-                fff4(new_xs, new_xe, y - 1, seed, color);
+                fff4(device, new_xs, new_xe, y - 1, seed, color);
             }
             else
             {
@@ -375,12 +387,11 @@ fff4(i32 x_start, i32 x_end, i32 y, u32 seed, v3 color)
 }
 
 void
-set_flood(i32 x, i32 y, i32 z, v3 color)
+set_flood(renderable_device *device, i32 x, i32 y, i32 z, v3 color)
 {
 
-    u32 seed;
-    get_pixel(x, y, &seed);
-    fff4(x, x, y, seed, color);
+    u32 seed = device->get_pixel(x, y, z);
+    fff4(device, x, x, y, seed, color);
 
 }
 

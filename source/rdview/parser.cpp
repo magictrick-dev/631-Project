@@ -10,10 +10,73 @@
 #include <sstream>
 #include <vector>
 
-char *
-rdview_source_fetch(const char *file_path)
+// --- RDView Parser Helpers ---------------------------------------------------
+
+void
+rdview_parser_strip_whitespace(std::string &line)
 {
 
+    // Get the first non-whitespace character.
+    i32 index = -1;
+    for (size_t idx = 0; idx < line.length(); ++idx)
+    {
+        if (isspace(line[idx]))
+            index = idx;
+        else
+            break;
+    }
+
+    if (index == -1)
+        return;
+
+    line.erase(0, index - 1);
+
+}
+
+void
+rdview_parser_rejoin_strings(std::vector<std::string>& lk_line)
+{
+
+    size_t idx = 0;
+    while (idx < lk_line.size())
+    {
+
+        std::string& current = lk_line[idx];
+        if (current[0] == '"' && current[current.length()-1] != '"')
+        {
+            while (idx < lk_line.size())
+            {
+                current += " ";
+                current += lk_line[++idx];
+                lk_line.erase(lk_line.begin()+idx);
+                idx--;
+                if (current[current.length()-1] == '"')
+                    break;
+            }
+        }
+
+        idx++;
+
+    }
+
+}
+
+std::string
+rdview_parser_keyword_dequote(std::string keyword)
+{
+    return keyword.substr(1, keyword.length()-2);
+}
+
+
+// --- The Parser --------------------------------------------------------------
+//
+// This is going to be scuffed, guaranteed.
+//
+
+char * rdview::
+get_source(const char *file_path)
+{
+    
     // Open the file.
     HANDLE file_handle = CreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ,
             NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -38,17 +101,234 @@ rdview_source_fetch(const char *file_path)
 
 }
 
-void
-rdview_source_free(char *buffer)
+void rdview::
+free_source(char * source_buffer)
 {
-    free(buffer);
+
+    if (source_buffer != NULL)
+    {
+        free(source_buffer);
+        source_buffer = NULL;
+    }
+
+    return;
+
 }
 
-// --- The Parser --------------------------------------------------------------
+rdview::
+rdview(const char *source)
+{
+
+    std::stringstream source_stream { source };
+    std::string line;
+
+    // Pull out each line, then construct a list of statements (non-empty, non-comments).
+    i32 current_line = 1;
+    while (std::getline(source_stream, line))
+    {
+        this->source_lines.push_back(line);
+        
+        // Before generating, trim whitespace.
+        rdview_parser_strip_whitespace(line);
+        if (!line.empty() && line[0] != '#')
+            this->statements.push_back({current_line, line});
+
+        current_line++;
+    }
+    
+    return;
+}
+
+bool rdview::
+begin()
+{
+
+    if (this->operations[0]->optype != RDVIEW_OPTYPE_DISPLAY)
+        return false;
+
+    this->operations[0]->execute();
+
+    size_t idx = 1;
+    for (; idx < this->operations.size(); idx++)
+    {
+
+        if (this->operations[idx]->optype == RDVIEW_OPTYPE_WORLDBEGIN)
+        {
+            this->start = idx;
+            return true;
+        }
+
+        this->operations[idx]->execute();
+
+    }
+
+    return true;
+
+}
+
+void rdview::
+render()
+{
+
+    for (size_t idx = start; idx < this->operations.size(); ++idx)
+    {
+        this->operations[idx]->execute();
+    }
+
+}
+
+bool rdview::
+init()
+{
+
+    i32 idx = 0;
+    rdstatement *current_statement = NULL;
+    while (idx < this->statements.size())
+    {
+        current_statement = &this->statements[idx];
+        std::string identifier = current_statement->get_identifier();
+
+        if (identifier == "Display")
+        {
+            rddisplay *display = new rddisplay(this);
+            if (!display->parse(current_statement))
+                return false;
+            display->optype = RDVIEW_OPTYPE_DISPLAY;
+            this->operations.push_back(display);
+        }
+
+        else if (identifier == "Format")
+        {
+
+            rdformat *format = new rdformat(this);
+            if (!format->parse(current_statement))
+                return false;
+            format->optype = RDVIEW_OPTYPE_FORMAT;
+            this->operations.push_back(format);
+        }
+
+        else if (identifier == "Background")
+        {
+            
+            rdbackground *background = new rdbackground(this);
+            if (!background->parse(current_statement))
+                return false;
+            background->optype = RDVIEW_OPTYPE_BACKGROUND;
+            this->operations.push_back(background);
+        }
+
+        else if (identifier == "Color")
+        {
+            rdcolor *color = new rdcolor(this);
+            if (!color->parse(current_statement))
+                return false;
+            color->optype = RDVIEW_OPTYPE_COLOR;
+            this->operations.push_back(color);
+        }   
+
+        else if (identifier == "Point")
+        {
+            rdpoint *point = new rdpoint(this);
+            if (!point->parse(current_statement))
+                return false;
+            point->optype = RDVIEW_OPTYPE_POINT;
+            this->operations.push_back(point);
+        }
+
+        else if (identifier == "Line")
+        {
+            rdline *line = new rdline(this);
+            if (!line->parse(current_statement))
+                return false;
+            line->optype = RDVIEW_OPTYPE_LINE;
+            this->operations.push_back(line);
+        }
+
+        else if (identifier == "Circle")
+        {
+            rdcircle *circle = new rdcircle(this);
+            if (!circle->parse(current_statement))
+                return false;
+            circle->optype = RDVIEW_OPTYPE_CIRCLE;
+            this->operations.push_back(circle);
+        }
+
+        else if (identifier == "Fill")
+        {
+            rdflood *flood = new rdflood(this);
+            if (!flood->parse(current_statement))
+                return false;
+            flood->optype = RDVIEW_OPTYPE_FLOOD;
+            this->operations.push_back(flood);
+        }
+
+        else if (identifier == "WorldBegin")
+        {
+            rdworldbegin *worldbegin = new rdworldbegin(this);
+            if (!worldbegin->parse(current_statement))
+                return false;
+            worldbegin->optype = RDVIEW_OPTYPE_WORLDBEGIN;
+            this->operations.push_back(worldbegin);
+        }
+
+        else if (identifier == "WorldEnd")
+        {
+
+            rdworldend *worldend = new rdworldend(this);
+            if (!worldend->parse(current_statement))
+                return false;
+            worldend->optype = RDVIEW_OPTYPE_WORLDEND;
+            this->operations.push_back(worldend);
+
+        }
+
+        else
+        {
+            current_statement->print_unknown();
+        }
+
+        idx++;
+    }
+
+    return true;
+}
+
+// --- RDView Parser Statements ------------------------------------------------
 //
-// This is going to be scuffed, guaranteed.
+// Takes source lines and builds them out to tokens.
 //
 
+rdstatement::
+rdstatement(i32 line_number, std::string line)
+{
+
+    this->number = line_number;
+
+    std::stringstream ss { line };
+    std::string current;
+    while (ss >> current)
+    {
+        this->tokens.push_back(current);
+        current = "";
+    }
+
+    rdview_parser_rejoin_strings(this->tokens);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
 static inline void
 rdview_parser_strip_whitespace(std::string &line)
 {
@@ -585,3 +865,4 @@ rdview_source_run(rdview_configuration *config)
     }
 
 }
+#endif

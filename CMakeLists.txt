@@ -27,9 +27,11 @@ add_executable(j5
 
     "./source/renderer/renderer.h"
     "./source/renderer/renderer.cpp"
+    "./source/renderer/device.cpp"
 
     "./source/rdview/parser.h"
     "./source/rdview/parser.cpp"
+    "./source/rdview/operations.cpp"
 )
 
 target_include_directories(j5 PUBLIC

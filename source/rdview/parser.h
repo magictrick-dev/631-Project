@@ -2,93 +2,69 @@
 #define J5_RDVIEW_PARSER_H
 #include <core.h>
 
-#define RDVIEW_DEVICE_WINDOW     0
-#define RDVIEW_DEVICE_PNM        1
-#define RDVIEW_DEVICE_BMP        2
+#include <iostream>
+#include <vector>
+#include <string>
 
-#define RDVIEW_OPTYPE_ROOT       0
-#define RDVIEW_OPTYPE_COLOR      1
-#define RDVIEW_OPTYPE_CANVAS     2
-#define RDVIEW_OPTYPE_POINT      9
-#define RDVIEW_OPTYPE_LINE      10
-#define RDVIEW_OPTYPE_CIRCLE    11
-#define RDVIEW_OPTYPE_FLOOD     12
+#define RDVIEW_DEVICE_WINDOW        0
+#define RDVIEW_DEVICE_PNM           1
+#define RDVIEW_DEVICE_BMP           2
 
-#define RDVIEW_DRAW_TYPE_OUTPUT  0
-#define RDVIEW_DRAW_TYPE_SINGLE  0
-#define RDVIEW_DRAW_TYPE_DOUBLE  1
-#define RDVIEW_DRAW_TYPE_STEP    2
+#define RDVIEW_DRAW_TYPE_OUTPUT     0
+#define RDVIEW_DRAW_TYPE_SINGLE     0
+#define RDVIEW_DRAW_TYPE_DOUBLE     1
+#define RDVIEW_DRAW_TYPE_STEP       2
 
-struct rdview_operation
+#define RDVIEW_OPTYPE_UNDEFINED     0
+#define RDVIEW_OPTYPE_DISPLAY       1
+#define RDVIEW_OPTYPE_FORMAT        2
+#define RDVIEW_OPTYPE_BACKGROUND    3
+#define RDVIEW_OPTYPE_COLOR         4
+#define RDVIEW_OPTYPE_POINT         5
+#define RDVIEW_OPTYPE_LINE          6
+#define RDVIEW_OPTYPE_CIRCLE        7
+#define RDVIEW_OPTYPE_FLOOD         8
+#define RDVIEW_OPTYPE_WORLDBEGIN    9
+#define RDVIEW_OPTYPE_WORLDEND      10
+
+#include <rdview/operations.h>
+#include <rdview/statement.h>
+#include <renderer/device.h>
+
+void        rdview_parser_strip_whitespace(std::string &line);
+void        rdview_parser_rejoin_strings(std::vector<std::string>& lk_line);
+std::string rdview_parser_keyword_dequote(std::string keyword);
+
+// --- RDView Parser & Configuration -------------------------------------------
+
+class rdview
 {
-    u32     type;
-    void   *operands;
+    public:
+        static char *   get_source(const char *file_path);
+        static void     free_source(char *source_buffer);
 
-    rdview_operation *next_operation;
+    public:
+        rdview(const char *rdview_source_code);
+        bool init();
+        bool begin();
+        void render();
+
+    public:
+        i32 width        = 640;
+        i32 height       = 480;
+        v3  draw_color   = { 1.0f, 1.0f, 1.0f };
+        v3  canvas_color = { 0.0f, 0.0f, 0.0f };
+
+        std::string title;
+        u32         device;
+        u32         mode;
+
+        renderable_device *active_device;
+
+        std::vector<std::string> source_lines;
+        std::vector<rdstatement> statements;
+        std::vector<rdoperation*> operations;
+        i32 start = 0;
 };
-
-struct rdview_color
-{
-    f32 r;
-    f32 g;
-    f32 b;
-};
-
-struct rdview_point
-{
-    i32 x;
-    i32 y;
-    i32 z;
-};
-
-struct rdview_line
-{
-    i32 x1;
-    i32 y1;
-    i32 z1;
-    i32 x2;
-    i32 y2;
-    i32 z2;
-};
-
-struct rdview_circle
-{
-    i32 x;
-    i32 y;
-    i32 z;
-    i32 r;
-};
-
-struct rdview_flood
-{
-    i32 x;
-    i32 y;
-    i32 z;
-};
-
-struct rdview_configuration
-{
-
-    struct
-    {
-        char    display_name[80];
-        
-        u32     device_draw_method;
-        u32     device_type;
-        i32     device_width;
-        i32     device_height;
-    } state;
-
-    v3 draw_color;
-    v3 canvas_color;
-
-    rdview_operation *operation_list;
-
-};
-
-char*   rdview_source_fetch(const char *file_path);
-void    rdview_source_free(char *buffer);
-bool    rdview_source_parse(rdview_configuration *config, const char *buffer);
-void    rdview_source_run(rdview_configuration *config);
 
 #endif
