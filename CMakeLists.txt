@@ -18,8 +18,6 @@ endif (WIN32)
 
 add_executable(j5
     "./source/main.cpp"
-    "./source/window.h"
-    "./source/window.cpp"
 
     "./source/core.h"
     "./source/core/definitions.h"

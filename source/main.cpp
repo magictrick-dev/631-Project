@@ -12,11 +12,12 @@
 #include <iostream>
 #include <cstdio>
 
-#include <core.h>
-#include <window.h>
 #include <rdview/parser.h>
+
 #include <renderer/device.h>
 #include <renderer/renderer.h>
+
+#include <core.h>
 
 int
 main(int argc, char ** argv)
@@ -52,16 +53,24 @@ main(int argc, char ** argv)
             render_description.height
         };
 
-        if (!window.init_window())
+        //bool is_double_buffered = render_description.mode == RDVIEW_DRAW_TYPE_DOUBLE;
+        bool is_double_buffered = false;
+
+        if (!window.init_window(is_double_buffered))
             return 1;
 
         render_description.active_device = &window;
 
 
+        Sleep(500);
+
         // Okay, now we can process the operations.
         //rdview_source_run(&current_configuration);
         window.set_fill(render_description.canvas_color);
         render_description.render();
+
+        if (is_double_buffered)
+            window.swap_buffers();
 
         while (!window.should_close())
         {

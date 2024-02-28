@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include <core.h>
-#include <window.h>
 #include <renderer/renderer.h>
 
 // --- Device Specific Functions -----------------------------------------------
@@ -25,92 +24,6 @@
 //      Not to be confused with flood_fill(), set_fill() essentially overwrites
 //      the entire device's pixel buffer with a single color.
 //
-#if 0
-typedef void (*set_in_window_fptr)(i32, i32, HDC, COLORREF&);
-
-static inline void
-set_in_window(i32 x, i32 y, HDC device, COLORREF& ref)
-{
-    SetPixel(device, x, y, ref);
-}
-
-static inline void
-set_in_window_noop(i32 x, i32 y, HDC device, COLORREF& ref)
-{
-    return;
-}
-
-void
-set_pixel(i32 x, i32 y, v3 color)
-{
-
-    u8 red          = (u8)(255.0f * color.r);   
-    u8 green        = (u8)(255.0f * color.g);   
-    u8 blue         = (u8)(255.0f * color.b);
-
-    COLORREF cref = RGB(red, green, blue);
-
-    window_state *window = get_window_state();
-
-    // Rather than using branching, we can actually use some simple arithmetic
-    // to handle out-of-bounds. That way we don't have an issue with branch prediction
-    // on each call.
-    //
-    // TODO(Chris): This is a silly way to do this, faster than the if-statement,
-    //              slower than just changing the bounds of the line algorithm
-    //              at invocation time since we still operate on pixels not
-    //              bounded to the device. Oh well, modern hardware is kinda fast.
-    i32 rb = window->width - x;
-    i32 bb = window->height - y;
-
-    u32 bounds_left = (0x1 << 31) & x;
-    u32 bounds_top = (0x1 << 31) & y;
-    u32 bounds_right = (0x1 << 31) & rb;
-    u32 bounds_bottom = (0x1 << 31) & bb;
-    u32 bounded = ((bounds_left | bounds_top | bounds_right | bounds_bottom) >> 31);
-
-    static set_in_window_fptr setfps[2] { set_in_window, set_in_window_noop };
-    setfps[bounded](x, y, window->device, cref);
-
-}
-
-void
-set_fill(v3 color)
-{
-
-    u8 red          = (u8)(255.0f * color.r);   
-    u8 green        = (u8)(255.0f * color.g);   
-    u8 blue         = (u8)(255.0f * color.b);
-
-    COLORREF cref = RGB(red, green, blue);
-
-    BITMAPINFO info = {};
-    info.bmiHeader.biSize           = sizeof(BITMAPINFO);
-    info.bmiHeader.biWidth          = 1;
-    info.bmiHeader.biHeight         = 1;
-    info.bmiHeader.biPlanes         = 1;
-    info.bmiHeader.biBitCount       = 32;
-    info.bmiHeader.biCompression    = 0;
-    info.bmiHeader.biSizeImage      = 0;
-
-    u32 fill_pixel = (u32)cref;
-    window_state *window = get_window_state();
-
-    int ret = StretchDIBits(window->device, 0, 0, window->width, window->height,
-            0, 0, 1, 1, &fill_pixel, &info, DIB_RGB_COLORS, SRCCOPY);
-
-}
-
-void
-get_pixel(i32 x, i32 y, u32 *color)
-{
-
-    window_state *window = get_window_state();
-    COLORREF pixel = GetPixel(window->device, x, y);
-    *color = (u32)pixel;
-
-}
-#endif
 
 // --- Genereal Set Fill -------------------------------------------------------
 void

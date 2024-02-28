@@ -1,6 +1,6 @@
 # This is a test/example rd file
 
-Display "EdgeTest"  "PNM" "rgb"
+Display "EdgeTest"  "Screen" "rgbsingle"
 Format 400 400 
 
 # Testing filling at edges
