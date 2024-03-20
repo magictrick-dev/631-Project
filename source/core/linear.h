@@ -1,14 +1,14 @@
+#ifndef J5_CORE_LINEAR_H
+#define J5_CORE_LINEAR_H
 #define LINEAR_DEFINE_OSTREAM
 #include <core/primitives.h>
 
 struct v2;
 struct v3;
 struct v4;
+struct m4;
 
 // --- Vector 2D ---------------------------------------------------------------
-//
-// Forms the basis of a general vector-2D.
-//
 
 struct v2
 {
@@ -31,82 +31,21 @@ struct v2
 
     };
 
-    inline v2&      operator*=(const f32& rhs);
-    inline v2&      operator+=(const v2&  rhs);
-    inline v2&      operator-=(const v2&  rhs);
+    v2&          operator*=(const f32& rhs);
+    v2&          operator+=(const v2&  rhs);
+    v2&          operator-=(const v2&  rhs);
+    f32&         operator[](size_t idx);
+    const f32&   operator[](size_t idx) const;
 
 };
 
-inline v2& v2::
-operator*=(const f32& rhs)
-{
-    this->x *= rhs;
-    this->y *= rhs;
-    return *this;
-}
 
-inline v2& v2::
-operator+=(const v2& rhs)
-{
-    this->x += rhs.x;
-    this->y += rhs.y;
-    return *this;
-}
-
-inline v2& v2::
-operator-=(const v2& rhs)
-{
-    this->x -= rhs.x;
-    this->y -= rhs.y;
-    return *this;
-}
-
-inline v2
-operator*(const v2& lhs, const f32& rhs)
-{
-    v2 result = lhs;
-    result *= rhs;
-    return result;
-}
-
-inline v2
-operator*(const f32& lhs, const v2& rhs)
-{
-    v2 result = rhs;
-    result *= lhs;
-    return result;
-}
-
-inline v2
-operator+(const v2& lhs, const v2& rhs)
-{
-    v2 result = lhs;
-    result += rhs;
-    return result;
-}
-
-inline v2
-operator-(const v2& lhs, const v2& rhs)
-{
-    v2 result = lhs;
-    result -= rhs;
-    return result;
-}
-
-#ifdef LINEAR_DEFINE_OSTREAM
-#include <iostream>
-std::ostream&
-operator<<(std::ostream& out, const v2& v)
-{
-    out << "{ " << v.x << ", " << v.y << " }";
-    return out;
-}
-#endif
+v2 operator*(const v2& lhs, const f32& rhs);
+v2 operator*(const f32& lhs, const v2& rhs);
+v2 operator+(const v2& lhs, const v2& rhs);
+v2 operator-(const v2& lhs, const v2& rhs);
 
 // --- Vector 3D ---------------------------------------------------------------
-//
-//
-//
 
 struct v3
 {
@@ -143,86 +82,20 @@ struct v3
 
     };
 
-    inline v3&      operator*=(const f32& rhs);
-    inline v3&      operator+=(const v3&  rhs);
-    inline v3&      operator-=(const v3&  rhs);
+    v3&          operator*=(const f32& rhs);
+    v3&          operator+=(const v3&  rhs);
+    v3&          operator-=(const v3&  rhs);
+    f32&         operator[](size_t idx);
+    const f32&   operator[](size_t idx) const;
 
 };
 
-inline v3& v3::
-operator*=(const f32& rhs)
-{
-    this->x *= rhs;
-    this->y *= rhs;
-    this->z *= rhs;
-    return *this;
-}
-
-inline v3& v3::
-operator+=(const v3& rhs)
-{
-    this->x += rhs.x;
-    this->y += rhs.y;
-    this->z += rhs.z;
-    return *this;
-}
-
-inline v3& v3::
-operator-=(const v3& rhs)
-{
-    this->x -= rhs.x;
-    this->y -= rhs.y;
-    this->z -= rhs.z;
-    return *this;
-}
-
-inline v3
-operator*(const v3& lhs, const f32& rhs)
-{
-    v3 result = lhs;
-    result *= rhs;
-    return result;
-}
-
-inline v3
-operator*(const f32& lhs, const v3& rhs)
-{
-    v3 result = rhs;
-    result *= lhs;
-    return result;
-}
-
-inline v3
-operator+(const v3& lhs, const v3& rhs)
-{
-    v3 result = lhs;
-    result += rhs;
-    return result;
-}
-
-inline v3
-operator-(const v3& lhs, const v3& rhs)
-{
-    v3 result = lhs;
-    result -= rhs;
-    return result;
-}
-
-#ifdef LINEAR_DEFINE_OSTREAM
-#include <iostream>
-std::ostream&
-operator<<(std::ostream& out, const v3& v)
-{
-    out << "{ " << v.x << ", " << v.y << ", " << v.z << " }";
-    return out;
-}
-#endif
-
+v3 operator*(const v3& lhs, const f32& rhs);
+v3 operator*(const f32& lhs, const v3& rhs);
+v3 operator+(const v3& lhs, const v3& rhs);
+v3 operator-(const v3& lhs, const v3& rhs);
 
 // --- Vector 4D ---------------------------------------------------------------
-//
-//
-//
 
 struct v4
 {
@@ -274,81 +147,26 @@ struct v4
 
     };
 
-    inline v4&      operator*=(const f32& rhs);
-    inline v4&      operator+=(const v4&  rhs);
-    inline v4&      operator-=(const v4&  rhs);
+    v4&         operator*=(const f32& rhs);
+    v4&         operator+=(const v4&  rhs);
+    v4&         operator-=(const v4&  rhs);
+    f32&        operator[](size_t idx);
+    const f32&  operator[](size_t idx) const;
+
+    f32         magnitude_squared() const;
+    v4          normalize() const;
 
 };
 
-inline v4& v4::
-operator*=(const f32& rhs)
-{
-    this->x *= rhs;
-    this->y *= rhs;
-    this->z *= rhs;
-    return *this;
-}
+v4      normalize(const v4& vector);
+f32     magnitude_squared(const v4& vector);
+v4      cross(const v4& lhs, const v4& rhs);
+f32     dot(const v4& lhs, const v4& rhs);
 
-inline v4& v4::
-operator+=(const v4& rhs)
-{
-    this->x += rhs.x;
-    this->y += rhs.y;
-    this->z += rhs.z;
-    return *this;
-}
-
-inline v4& v4::
-operator-=(const v4& rhs)
-{
-    this->x -= rhs.x;
-    this->y -= rhs.y;
-    this->z -= rhs.z;
-    return *this;
-}
-
-inline v4
-operator*(const v4& lhs, const f32& rhs)
-{
-    v4 result = lhs;
-    result *= rhs;
-    return result;
-}
-
-inline v4
-operator*(const f32& lhs, const v4& rhs)
-{
-    v4 result = rhs;
-    result *= lhs;
-    return result;
-}
-
-inline v4
-operator+(const v4& lhs, const v4& rhs)
-{
-    v4 result = lhs;
-    result += rhs;
-    return result;
-}
-
-inline v4
-operator-(const v4& lhs, const v4& rhs)
-{
-    v4 result = lhs;
-    result -= rhs;
-    return result;
-}
-
-#ifdef LINEAR_DEFINE_OSTREAM
-#include <iostream>
-std::ostream&
-operator<<(std::ostream& out, const v4& v)
-{
-    out << "{ " << v.x << ", " << v.y << ", "
-        << v.z << ", " << v.w << " }";
-    return out;
-}
-#endif
+v4      operator*(const v4& lhs, const f32& rhs);
+v4      operator*(const f32& lhs, const v4& rhs);
+v4      operator+(const v4& lhs, const v4& rhs);
+v4      operator-(const v4& lhs, const v4& rhs);
 
 // --- Matrix 4x4 --------------------------------------------------------------
 //
@@ -377,40 +195,35 @@ struct m4
 
     };
 
-    inline f32& operator[](size_t index);
+    f32& operator[](size_t index);
+    const f32& operator[](size_t index) const;
+
+    static m4 create_zero();
+    static m4 create_identity();
+    static m4 create_transform(v3 t);
+    static m4 create_scale(v3 s);
+    static m4 create_rotation(v3 r);
+    static m4 create_rotation_z(f32 degrees);
+    static m4 create_rotation_y(f32 degrees);
+    static m4 create_rotation_x(f32 degrees);
+    static m4 create_world_to_camera(v3 eye, v3 at, v3 up);
+    static m4 create_camera_to_clip(f32 fov, f32 near, f32 far, f32 aspect_ratio);
+
+    m4& operator*=(const m4& rhs);
 
 };
 
-inline f32& m4::
-operator[](size_t index)
-{
-    return elements[index];
-}
+v4 operator*(const m4& lhs, const v4& rhs);
+m4 operator*(const m4& lhs, const m4& rhs);
+
+// --- Output Stream Overloads -------------------------------------------------
 
 #ifdef LINEAR_DEFINE_OSTREAM
 #include <iostream>
-std::ostream&
-operator<<(std::ostream& out, const m4& m)
-{
-
-    std::cout << "{ ";
-
-    for (size_t row = 0; row < 4; ++row)
-    {
-        
-        std::cout << "{ " << m.rows[row].x << ", " <<
-            m.rows[row].y << ", " << m.rows[row].z << ", " <<
-            m.rows[row].w << " }";
-
-        if (row < 3)
-            std::cout << ", ";
-
-    };
-
-    std::cout << " }";
-
-    return out;
-}
+std::ostream& operator<<(std::ostream& out, const v2& v);
+std::ostream& operator<<(std::ostream& out, const v3& v);
+std::ostream& operator<<(std::ostream& out, const v4& v);
+std::ostream& operator<<(std::ostream& out, const m4& m);
 #endif
 
-
+#endif

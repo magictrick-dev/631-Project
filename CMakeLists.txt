@@ -22,6 +22,8 @@ add_executable(j5
     "./source/core.h"
     "./source/core/definitions.h"
     "./source/core/primitives.h"
+    "./source/core/linear.h"
+    "./source/core/linear.cpp"
 
     "./source/renderer/renderer.h"
     "./source/renderer/renderer.cpp"
