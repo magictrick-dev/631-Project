@@ -26,6 +26,14 @@
 #define RDVIEW_OPTYPE_FLOOD         8
 #define RDVIEW_OPTYPE_WORLDBEGIN    9
 #define RDVIEW_OPTYPE_WORLDEND      10
+#define RDVIEW_OPTYPE_CAMERAEYE     11
+#define RDVIEW_OPTYPE_CAMERAAT      12
+#define RDVIEW_OPTYPE_CAMERAUP      13
+#define RDVIEW_OPTYPE_TRANSLATION   14
+#define RDVIEW_OPTYPE_SCALE         15
+#define RDVIEW_OPTYPE_ROTATION      16
+#define RDVIEW_OPTYPE_CUBE          17
+#define RDVIEW_OPTYPE_CAMERAFOV     18
 
 #include <rdview/operations.h>
 #include <rdview/statement.h>
@@ -50,10 +58,30 @@ class rdview
         void render();
 
     public:
+        void rd_point_pipeline(v3 point, bool move);
+        void rd_line_pipeline(v3 point, bool move);
+
+        v4  rd_line_state;
+        v4  rd_point_state;
+
+    public:
         i32 width        = 640;
         i32 height       = 480;
         v3  draw_color   = { 1.0f, 1.0f, 1.0f };
         v3  canvas_color = { 0.0f, 0.0f, 0.0f };
+    
+        v3  camera_eye  = { 0, 0, 0 };
+        v3  camera_at   = { 0, 0, -1 };
+        v3  camera_up   = { 0, 1, 0 };
+
+        f32 fov = 90.0f;
+        f32 nearp = 1.0f;
+        f32 farp = 100000000.0f;
+
+        m4 world_to_camera;
+        m4 camera_to_clip;
+        m4 clip_to_device;
+        std::vector<m4> transform_stack;
 
         std::string title;
         u32         device;

@@ -247,12 +247,13 @@ parse(void *statement)
         return false;
     }
  
-    this->x1 = std::stoi(stm[1]);
-    this->y1 = std::stoi(stm[2]);
-    this->z1 = std::stoi(stm[3]);
-    this->x2 = std::stoi(stm[4]);
-    this->y2 = std::stoi(stm[5]);
-    this->z2 = std::stoi(stm[6]);
+    this->x1 = std::stof(stm[1]);
+    this->y1 = std::stof(stm[2]);
+    this->z1 = std::stof(stm[3]);
+
+    this->x2 = std::stof(stm[4]);
+    this->y2 = std::stof(stm[5]);
+    this->z2 = std::stof(stm[6]);
 
     return true;
 
@@ -263,7 +264,9 @@ execute()
 {
 
     rdview *rdv = (rdview*)this->rdview_parent;
-    set_line(rdv->active_device, this->x1, this->x2, this->y1, this->y2, this->z1, this->z2, rdv->draw_color);
+    //set_line(rdv->active_device, this->x1, this->x2, this->y1, this->y2, this->z1, this->z2, rdv->draw_color);
+    rdv->rd_line_pipeline({(f32)this->x1, (f32)this->y1, (f32)this->z1}, true);
+    rdv->rd_line_pipeline({(f32)this->x2, (f32)this->y2, (f32)this->z2}, false);
 
     return;
 
@@ -293,9 +296,9 @@ parse(void *statement)
         return false;
     }
  
-    this->x = std::stoi(stm[1]);
-    this->y = std::stoi(stm[2]);
-    this->z = std::stoi(stm[3]);
+    this->x = std::stof(stm[1]);
+    this->y = std::stof(stm[2]);
+    this->z = std::stof(stm[3]);
 
     return true;
 
@@ -306,7 +309,8 @@ execute()
 {
 
     rdview *rdv = (rdview*)this->rdview_parent;
-    set_point(rdv->active_device, this->x, this->y, this->z, rdv->draw_color);
+    //set_point(rdv->active_device, this->x, this->y, this->z, rdv->draw_color);
+    rdv->rd_point_pipeline({(f32)this->x, (f32)this->y, (f32)this->z}, false);
 
     return;
 
@@ -431,6 +435,34 @@ void rdworldbegin::
 execute()
 {
 
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    // Set up the pipeline matrices.
+    v4 ce;
+    ce.xyz = rdv->camera_eye;
+    ce.w = 1.0f;
+
+    v4 ca;
+    ca.xyz = rdv->camera_at;
+    ca.w = 1.0f;
+
+    v4 cu;
+    cu.xyz = rdv->camera_up;
+    cu.w = 1.0f;
+
+    rdv->world_to_camera = m4::create_world_to_camera(ce, ca, cu);
+    rdv->camera_to_clip = m4::create_camera_to_clip(rdv->fov, rdv->nearp,
+            rdv->farp, ((f32)rdv->width / (f32)rdv->height));
+    rdv->clip_to_device = m4::create_clip_to_device(rdv->width, rdv->height);
+
+    std::cout << "World to Camera:\n" << rdv->world_to_camera << std::endl << std::endl;
+    std::cout << "Camera to Clip:\n" << rdv->camera_to_clip << std::endl << std::endl;
+    std::cout << "Clip to Device:\n" << rdv->clip_to_device << std::endl << std::endl;
+
+    // Reset the transform stack.
+    rdv->transform_stack.clear();
+    rdv->transform_stack.push_back(m4::create_identity());
+
     return;
 
 }
@@ -466,6 +498,331 @@ parse(void *statement)
 void rdworldend::
 execute()
 {
+
+    return;
+
+}
+
+// --- Camera Eye --------------------------------------------------------------
+
+rdcameraeye::
+rdcameraeye(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdcameraeye::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 4)
+    {
+        stm.print_error("The number of arguments for camera eye is incorrect.");
+        return false;
+    }
+ 
+    this->eye = { std::stof(stm[1]), std::stof(stm[2]), std::stof(stm[3]) };
+
+    return true;
+
+}
+
+void rdcameraeye::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->camera_eye = this->eye;
+
+    return;
+
+}
+
+// --- Camera Eye --------------------------------------------------------------
+
+rdcameraat::
+rdcameraat(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdcameraat::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 4)
+    {
+        stm.print_error("The number of arguments for camera at is incorrect.");
+        return false;
+    }
+ 
+    this->at = { std::stof(stm[1]), std::stof(stm[2]), std::stof(stm[3]) };
+
+    return true;
+
+}
+
+void rdcameraat::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->camera_at = this->at;
+
+    return;
+
+}
+
+// --- Camera Up ---------------------------------------------------------------
+
+rdcameraup::
+rdcameraup(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdcameraup::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 4)
+    {
+        stm.print_error("The number of arguments for camera up is incorrect.");
+        return false;
+    }
+ 
+    this->up = { std::stof(stm[1]), std::stof(stm[2]), std::stof(stm[3]) };
+
+    return true;
+
+}
+
+void rdcameraup::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->camera_up = this->up;
+
+    return;
+
+}
+
+// --- Translation -------------------------------------------------------------
+
+rdtranslation::
+rdtranslation(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdtranslation::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 4)
+    {
+        stm.print_error("The number of arguments for translation is incorrect.");
+        return false;
+    }
+ 
+    this->x = std::stof(stm[1]);
+    this->y = std::stof(stm[2]);
+    this->z = std::stof(stm[3]);
+
+    return true;
+
+}
+
+void rdtranslation::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    m4 translation = m4::create_transform({this->x, this->y, this->z});
+    rdv->transform_stack.push_back(translation);
+
+    return;
+
+}
+
+// --- Scale -------------------------------------------------------------------
+
+rdscale::
+rdscale(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdscale::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 4)
+    {
+        stm.print_error("The number of arguments for scale is incorrect.");
+        return false;
+    }
+ 
+    this->x = std::stof(stm[1]);
+    this->y = std::stof(stm[2]);
+    this->z = std::stof(stm[3]);
+
+    return true;
+
+}
+
+void rdscale::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    m4 scale = m4::create_scale({this->x, this->y, this->z});
+    rdv->transform_stack.push_back(scale);
+
+    return;
+
+}
+
+// --- Camera FOV --------------------------------------------------------------
+
+rdcamerafov::
+rdcamerafov(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdcamerafov::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 2)
+    {
+        stm.print_error("The number of arguments for scale is incorrect.");
+        return false;
+    }
+ 
+    this->fov = std::stof(stm[1]);
+
+    return true;
+
+}
+
+void rdcamerafov::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->fov = this->fov;
+
+    return;
+
+}
+
+
+// --- Cube --------------------------------------------------------------------
+
+rdcube::
+rdcube(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdcube::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 1)
+    {
+        stm.print_error("The number of arguments for cube is incorrect.");
+        return false;
+    }
+ 
+    return true;
+
+}
+
+void rdcube::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    // Front
+    rdv->rd_line_pipeline({-1.0f, -1.0f, 1.0f}, true);
+    rdv->rd_line_pipeline({1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_line_pipeline({1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_line_pipeline({-1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_line_pipeline({-1.0f, -1.0f, 1.0f}, false);
+
+    // Left
+    rdv->rd_line_pipeline({-1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_line_pipeline({-1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({-1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({-1.0f, -1.0f, 1.0f}, false);
+
+    // Bottom
+    rdv->rd_line_pipeline({-1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({1.0f, -1.0f, 1.0f}, false);
+
+    // Right
+    rdv->rd_line_pipeline({1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({1.0f, 1.0f, 1.0f}, false);
+
+    // Top
+    rdv->rd_line_pipeline({1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_line_pipeline({-1.0f, 1.0f, -1.0f}, false);
 
     return;
 

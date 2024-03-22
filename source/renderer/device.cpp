@@ -279,7 +279,7 @@ set_fill(v3 color)
     u8 green        = (u8)(255.0f * color.g);   
     u8 blue         = (u8)(255.0f * color.b);
 
-    COLORREF cref = RGB(red, green, blue);
+    u32 cref = (red << 16) | (green << 8) | (blue << 0);
 
     for (size_t i = 0; i < (this->width * this->height); ++i)
     {
@@ -308,8 +308,8 @@ set_pixel(i32 x, i32 y, i32 z, v3 color)
     //              slower than just changing the bounds of the line algorithm
     //              at invocation time since we still operate on pixels not
     //              bounded to the device. Oh well, modern hardware is kinda fast.
-    i32 rb = this->width - x;
-    i32 bb = this->height - y;
+    i32 rb = this->width - x - 1;
+    i32 bb = this->height - y - 1;
 
     u32 bounds_left = (0x1 << 31) & x;
     u32 bounds_top = (0x1 << 31) & y;
@@ -378,7 +378,7 @@ set_pixel(i32 x, i32 y, i32 z, v3 color)
     u8 green        = (u8)(255.0f * color.g);   
     u8 blue         = (u8)(255.0f * color.b);
 
-    COLORREF cref = RGB(red, green, blue);
+    u32 cref = (red << 16) | (green << 8) | (blue << 0);
 
     i32 rb = this->width - x - 1;
     i32 bb = this->height - y - 1;

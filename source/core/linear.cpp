@@ -454,27 +454,55 @@ create_world_to_camera(v4 eye, v4 at, v4 up)
 
     m4 T = m4::create_zero();
     T.rows[3][3] = 1.0f;
-    T[0][0] = U.x;
-    T[0][1] = U.y;
-    T[0][2] = U.z;
-    T[1][0] = V.x;
-    T[1][1] = V.y;
-    T[1][2] = V.z;
-    T[2][0] = A.x;
-    T[2][1] = A.y;
-    T[2][2] = A.z;
+    T.rows[0][0] = U.x;
+    T.rows[0][1] = U.y;
+    T.rows[0][2] = U.z;
+    T.rows[1][0] = V.x;
+    T.rows[1][1] = V.y;
+    T.rows[1][2] = V.z;
+    T.rows[2][0] = A.x;
+    T.rows[2][1] = A.y;
+    T.rows[2][2] = A.z;
 
-    m4 result = R * T;
+    m4 result = T * R;
     return result;
 
 }
 
 m4 m4::
-create_camera_to_clip(f32 fov, f32 near, f32 far, f32 aspect_ratio)
+create_camera_to_clip(f32 fov, f32 n, f32 f, f32 a)
 {
 
+    f32 tf = tanf(DEGREES_TO_RADIANS(fov) / 2);
+    m4 T = m4::create_zero();
+    T.rows[0][0] = 1.0f / (a * tf);
+    T.rows[1][1] = 1.0f / tf;
+    T.rows[2][2] = f / (f - n);
+    T.rows[2][3] = -(f * n) / (f - n);
+    T.rows[3][2] = 1.0f;
 
+    m4 S = m4::create_identity();
+    S.rows[0][0] = 0.5f;
+    S.rows[1][1] = 0.5f;
+    S.rows[2][2] = 1.0f;
 
+    S.rows[0][3] = 0.5f;
+    S.rows[1][3] = 0.5f;
+    S.rows[3][3] = 1.0f;
+
+    m4 R = S * T;
+
+    return R;
+}
+
+m4 m4::
+create_clip_to_device(int width, int height)
+{
+    m4 T = m4::create_identity();
+    T.rows[0][0] = width;
+    T.rows[1][1] = -height;
+    T.rows[1][3] = height;
+    return T;
 }
 
 v4

@@ -73,9 +73,9 @@ class rdpoint : public rdoperation
         virtual bool    parse(void *statement);
                         rdpoint(void *parent);
 
-        i32 x;
-        i32 y;
-        i32 z;
+        f32 x;
+        f32 y;
+        f32 z;
 };
 
 class rdline : public rdoperation
@@ -85,12 +85,12 @@ class rdline : public rdoperation
         virtual bool    parse(void *statement);
                         rdline(void *parent);
 
-        i32 x1;
-        i32 x2;
-        i32 y1;
-        i32 y2;
-        i32 z1;
-        i32 z2;
+        f32 x1;
+        f32 x2;
+        f32 y1;
+        f32 y2;
+        f32 z1;
+        f32 z2;
 
 };
 
@@ -134,4 +134,79 @@ class rdworldend : public rdoperation
         virtual bool    parse(void *statement);
                         rdworldend(void *parent);
 };
+
+class rdcameraeye : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcameraeye(void *parent);
+
+        v3 eye;
+};
+
+class rdcameraat : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcameraat(void *parent);
+
+        v3 at;
+};
+
+class rdcameraup : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcameraup(void *parent);
+
+        v3 up;
+};
+
+class rdtranslation : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdtranslation(void *parent);
+
+        f32 x;
+        f32 y;
+        f32 z;
+};
+
+class rdscale : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdscale(void *parent);
+
+        f32 x;
+        f32 y;
+        f32 z;
+};
+
+class rdcube : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcube(void *parent);
+};
+
+class rdcamerafov : public rdoperation
+{
+
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcamerafov(void *parent);
+
+    f32 fov;
+
+};
+
 #endif

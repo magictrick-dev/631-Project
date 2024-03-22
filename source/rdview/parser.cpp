@@ -10,6 +10,69 @@
 #include <sstream>
 #include <vector>
 
+// --- RDView Pipelines --------------------------------------------------------
+
+void rdview::
+rd_point_pipeline(v3 point, bool move)
+{
+
+    v4 h_point;
+    h_point.xyz = point;
+    h_point.w   = 1.0f;
+
+    //v4 result = this->world_to_camera * this->camera_to_clip * this->clip_to_device * h_point;
+    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * h_point;
+
+    if (move)
+    {
+        this->rd_point_state = result;
+        return;
+    }
+
+    set_point(this->active_device, h_point.x, h_point.y, h_point.z, this->draw_color);
+    this->rd_point_state = result;
+
+}
+
+void rdview::
+rd_line_pipeline(v3 point, bool move)
+{
+
+
+    v4 h_point;
+    h_point.xyz = point;
+    h_point.w   = 1.0f;
+
+    m4 mt = this->transform_stack[0];
+    for (size_t i = 1; i < this->transform_stack.size(); ++i)
+        mt = mt * this->transform_stack[i];
+
+    //v4 result = this->world_to_camera * this->camera_to_clip * this->clip_to_device * h_point;
+    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * mt * h_point;
+    result.x /= result.w;
+    result.y /= result.w;
+    result.z /= result.w;
+    //v4 result = h_point;
+
+    std::cout << result << std::endl;
+
+    if (move == true)
+    {
+        this->rd_line_state = result;
+        return;
+    }
+    else
+    {
+        set_line(this->active_device, this->rd_line_state.x, result.x, this->rd_line_state.y,
+                result.y, this->rd_line_state.z, result.z, this->draw_color);
+    }
+
+    //set_line(this->active_device, 100, 500, 100, 300, 0, 0, this->draw_color);
+
+    this->rd_line_state = result;
+
+}
+
 // --- RDView Parser Helpers ---------------------------------------------------
 
 void
@@ -280,6 +343,77 @@ init()
             worldend->optype = RDVIEW_OPTYPE_WORLDEND;
             this->operations.push_back(worldend);
 
+        }
+
+        else if (identifier == "CameraEye")
+        {
+
+            rdcameraeye *cameraeye = new rdcameraeye(this);
+            if (!cameraeye->parse(current_statement))
+                return false;
+            cameraeye->optype = RDVIEW_OPTYPE_CAMERAEYE;
+            this->operations.push_back(cameraeye);
+
+        }
+
+        else if (identifier == "CameraAt")
+        {
+
+            rdcameraat *cameraat = new rdcameraat(this);
+            if (!cameraat->parse(current_statement))
+                return false;
+            cameraat->optype = RDVIEW_OPTYPE_CAMERAAT;
+            this->operations.push_back(cameraat);
+
+        }
+
+        else if (identifier == "CameraUp")
+        {
+
+            rdcameraup *cameraup = new rdcameraup(this);
+            if (!cameraup->parse(current_statement))
+                return false;
+            cameraup->optype = RDVIEW_OPTYPE_CAMERAUP;
+            this->operations.push_back(cameraup);
+
+        }
+
+        else if (identifier == "Translate")
+        {
+            rdtranslation *translation = new rdtranslation(this);
+            if (!translation->parse(current_statement))
+                return false;
+            translation->optype = RDVIEW_OPTYPE_TRANSLATION;
+            this->operations.push_back(translation);
+        }
+
+        else if (identifier == "Scale")
+        {
+            rdscale *scale = new rdscale(this);
+            if (!scale->parse(current_statement))
+                return false;
+            scale->optype = RDVIEW_OPTYPE_SCALE;
+            this->operations.push_back(scale);
+        }
+
+        else if (identifier == "Cube")
+        {
+
+            rdcube *cube = new rdcube(this);
+            if (!cube->parse(current_statement))
+                return false;
+            cube->optype = RDVIEW_OPTYPE_CUBE;
+            this->operations.push_back(cube);
+
+        }
+
+        else if (identifier == "CameraFOV")
+        {
+            rdcamerafov *camerafov = new rdcamerafov(this);
+            if (!camerafov->parse(current_statement))
+                return false;
+            camerafov->optype = RDVIEW_OPTYPE_CAMERAFOV;
+            this->operations.push_back(camerafov);
         }
 
         else

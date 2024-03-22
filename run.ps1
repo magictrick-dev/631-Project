@@ -1,1 +1,1 @@
-./bin/Debug/j5.exe ./rdviews/curves.rd
+./bin/Debug/j5.exe ./rdviews/s17.rd

@@ -122,7 +122,7 @@ struct v4
 
         struct
         {
-            v2 xyz;
+            v3 xyz;
             f32 _d0;
         };
 
@@ -135,7 +135,7 @@ struct v4
         struct
         {
             f32 _d1;
-            v2 yzw;
+            v3 yzw;
         };
 
         struct
@@ -206,8 +206,9 @@ struct m4
     static m4 create_rotation_z(f32 degrees);
     static m4 create_rotation_y(f32 degrees);
     static m4 create_rotation_x(f32 degrees);
-    static m4 create_world_to_camera(v3 eye, v3 at, v3 up);
+    static m4 create_world_to_camera(v4 eye, v4 at, v4 up);
     static m4 create_camera_to_clip(f32 fov, f32 near, f32 far, f32 aspect_ratio);
+    static m4 create_clip_to_device(int width, int height);
 
     m4& operator*=(const m4& rhs);
 
