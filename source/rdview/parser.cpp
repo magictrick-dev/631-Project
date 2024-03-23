@@ -21,7 +21,10 @@ rd_point_pipeline(v3 point, bool move)
     h_point.w   = 1.0f;
 
     //v4 result = this->world_to_camera * this->camera_to_clip * this->clip_to_device * h_point;
-    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * h_point;
+    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * this->current_transform * h_point;
+    result.x /= result.w;
+    result.y /= result.w;
+    result.z /= result.w;
 
     if (move)
     {
@@ -43,16 +46,11 @@ rd_line_pipeline(v3 point, bool move)
     h_point.xyz = point;
     h_point.w   = 1.0f;
 
-    m4 mt = this->transform_stack[0];
-    for (size_t i = 1; i < this->transform_stack.size(); ++i)
-        mt = mt * this->transform_stack[i];
-
     //v4 result = this->world_to_camera * this->camera_to_clip * this->clip_to_device * h_point;
-    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * mt * h_point;
+    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * this->current_transform * h_point;
     result.x /= result.w;
     result.y /= result.w;
     result.z /= result.w;
-    //v4 result = h_point;
 
     std::cout << result << std::endl;
 
@@ -240,188 +238,282 @@ render()
 
 }
 
+rdoperation* rdview::
+create_operation(rdstatement *current_statement)
+{
+
+    std::string identifier = current_statement->get_identifier();
+    if (identifier == "Display")
+    {
+        rddisplay *display = new rddisplay(this);
+        if (!display->parse(current_statement))
+            return NULL;
+        display->optype = RDVIEW_OPTYPE_DISPLAY;
+        return display;
+    }
+
+    else if (identifier == "Format")
+    {
+
+        rdformat *format = new rdformat(this);
+        if (!format->parse(current_statement))
+            return NULL;
+        format->optype = RDVIEW_OPTYPE_FORMAT;
+        return format;
+    }
+
+    else if (identifier == "Background")
+    {
+        
+        rdbackground *background = new rdbackground(this);
+        if (!background->parse(current_statement))
+            return NULL;
+        background->optype = RDVIEW_OPTYPE_BACKGROUND;
+        return background;
+    }
+
+    else if (identifier == "Color")
+    {
+        rdcolor *color = new rdcolor(this);
+        if (!color->parse(current_statement))
+            return NULL;
+        color->optype = RDVIEW_OPTYPE_COLOR;
+        return color;
+    }   
+
+    else if (identifier == "Point")
+    {
+        rdpoint *point = new rdpoint(this);
+        if (!point->parse(current_statement))
+            return NULL;
+        point->optype = RDVIEW_OPTYPE_POINT;
+        return point;
+    }
+
+    else if (identifier == "Line")
+    {
+        rdline *line = new rdline(this);
+        if (!line->parse(current_statement))
+            return NULL;
+        line->optype = RDVIEW_OPTYPE_LINE;
+        return line;
+    }
+
+    else if (identifier == "Circle")
+    {
+        rdcircle *circle = new rdcircle(this);
+        if (!circle->parse(current_statement))
+            return NULL;
+        circle->optype = RDVIEW_OPTYPE_CIRCLE;
+        return circle;
+    }
+
+    else if (identifier == "Fill")
+    {
+        rdflood *flood = new rdflood(this);
+        if (!flood->parse(current_statement))
+            return NULL;
+        flood->optype = RDVIEW_OPTYPE_FLOOD;
+        return flood;
+    }
+
+    else if (identifier == "WorldBegin")
+    {
+        rdworldbegin *worldbegin = new rdworldbegin(this);
+        if (!worldbegin->parse(current_statement))
+            return NULL;
+        worldbegin->optype = RDVIEW_OPTYPE_WORLDBEGIN;
+        return worldbegin;
+    }
+
+    else if (identifier == "WorldEnd")
+    {
+
+        rdworldend *worldend = new rdworldend(this);
+        if (!worldend->parse(current_statement))
+            return NULL;
+        worldend->optype = RDVIEW_OPTYPE_WORLDEND;
+        return worldend;
+    }
+
+    else if (identifier == "CameraEye")
+    {
+
+        rdcameraeye *cameraeye = new rdcameraeye(this);
+        if (!cameraeye->parse(current_statement))
+            return NULL;
+        cameraeye->optype = RDVIEW_OPTYPE_CAMERAEYE;
+        return cameraeye;
+    }
+
+    else if (identifier == "CameraAt")
+    {
+
+        rdcameraat *cameraat = new rdcameraat(this);
+        if (!cameraat->parse(current_statement))
+            return NULL;
+        cameraat->optype = RDVIEW_OPTYPE_CAMERAAT;
+        return cameraat;
+    }
+
+    else if (identifier == "CameraUp")
+    {
+
+        rdcameraup *cameraup = new rdcameraup(this);
+        if (!cameraup->parse(current_statement))
+            return NULL;
+        cameraup->optype = RDVIEW_OPTYPE_CAMERAUP;
+        return cameraup;
+    }
+
+    else if (identifier == "Translate")
+    {
+        rdtranslation *translation = new rdtranslation(this);
+        if (!translation->parse(current_statement))
+            return NULL;
+        translation->optype = RDVIEW_OPTYPE_TRANSLATION;
+        return translation;
+    }
+
+    else if (identifier == "Scale")
+    {
+        rdscale *scale = new rdscale(this);
+        if (!scale->parse(current_statement))
+            return NULL;
+        scale->optype = RDVIEW_OPTYPE_SCALE;
+        return scale;
+    }
+
+    else if (identifier == "Cube")
+    {
+
+        rdcube *cube = new rdcube(this);
+        if (!cube->parse(current_statement))
+            return NULL;
+        cube->optype = RDVIEW_OPTYPE_CUBE;
+        return cube;
+    }
+
+    else if (identifier == "CameraFOV")
+    {
+        rdcamerafov *camerafov = new rdcamerafov(this);
+        if (!camerafov->parse(current_statement))
+            return NULL;
+        camerafov->optype = RDVIEW_OPTYPE_CAMERAFOV;
+        return camerafov;
+    }
+
+    else if (identifier == "XformPush")
+    {
+        rdxformpush *xformpush = new rdxformpush(this);
+        if (!xformpush->parse(current_statement))
+            return NULL;
+        xformpush->optype = RDVIEW_OPTYPE_XFORMPUSH;
+        return xformpush;
+    }
+
+    else if (identifier == "XformPop")
+    {
+        rdxformpop *xformpop = new rdxformpop(this);
+        if (!xformpop->parse(current_statement))
+            return NULL;
+        xformpop->optype = RDVIEW_OPTYPE_XFORMPOP;
+        return xformpop;
+    }
+
+    else if (identifier == "Sphere")
+    {
+        rdsphere *sphere = new rdsphere(this);
+        if (!sphere->parse(current_statement))
+            return NULL;
+        sphere->optype = RDVIEW_OPTYPE_SPHERE;
+        return sphere;
+    }
+
+    else if (identifier == "Rotate")
+    {
+        rdrotate *rotate = new rdrotate(this);
+        if (!rotate->parse(current_statement))
+            return NULL;
+        rotate->optype = RDVIEW_OPTYPE_ROTATION;
+        return rotate;
+    }
+
+    else if (identifier == "ObjectBegin")
+    {
+        rdobjectbegin *objectbegin = new rdobjectbegin(this);
+        if (!objectbegin->parse(current_statement))
+            return NULL;
+        objectbegin->optype = RDVIEW_OPTYPE_OBJECTBEGIN;
+        return objectbegin;
+    }
+
+    else if (identifier == "ObjectEnd")
+    {
+        rdobjectend *objectend = new rdobjectend(this);
+        if (!objectend->parse(current_statement))
+            return NULL;
+        objectend->optype = RDVIEW_OPTYPE_OBJECTEND;
+        return objectend;
+    }
+
+    else if (identifier == "ObjectInstance")
+    {
+        rdobjectinstance *instance = new rdobjectinstance(this);
+        if (!instance->parse(current_statement))
+            return NULL;
+        instance->optype = RDVIEW_OPTYPE_OBJECTINST;
+        return instance;
+    }
+
+    else if (identifier == "PolySet")
+    {
+        rdpolyset *poly = new rdpolyset(this);
+        if (!poly->parse(current_statement))
+            return NULL;
+        poly->optype = RDVIEW_OPTYPE_OBJECTINST;
+        return poly;
+    }
+
+    else if (identifier == "Cone")
+    {
+        rdcone *cone = new rdcone(this);
+        if (!cone->parse(current_statement))
+            return NULL;
+        cone->optype = RDVIEW_OPTYPE_CONE;
+        return cone;
+
+    }
+
+    else if (identifier == "Cylinder")
+    {
+        rdcylinder *cylinder= new rdcylinder(this);
+        if (!cylinder->parse(current_statement))
+            return NULL;
+        cylinder->optype = RDVIEW_OPTYPE_CYLINDER;
+        return cylinder;
+
+    }
+
+    else
+    {
+        current_statement->print_unknown();
+        return NULL;
+    }
+
+}
+
 bool rdview::
 init()
 {
 
-    i32 idx = 0;
     rdstatement *current_statement = NULL;
-    while (idx < this->statements.size())
+    while (this->parse_index < this->statements.size())
     {
-        current_statement = &this->statements[idx];
-        std::string identifier = current_statement->get_identifier();
-
-        if (identifier == "Display")
-        {
-            rddisplay *display = new rddisplay(this);
-            if (!display->parse(current_statement))
-                return false;
-            display->optype = RDVIEW_OPTYPE_DISPLAY;
-            this->operations.push_back(display);
-        }
-
-        else if (identifier == "Format")
-        {
-
-            rdformat *format = new rdformat(this);
-            if (!format->parse(current_statement))
-                return false;
-            format->optype = RDVIEW_OPTYPE_FORMAT;
-            this->operations.push_back(format);
-        }
-
-        else if (identifier == "Background")
-        {
-            
-            rdbackground *background = new rdbackground(this);
-            if (!background->parse(current_statement))
-                return false;
-            background->optype = RDVIEW_OPTYPE_BACKGROUND;
-            this->operations.push_back(background);
-        }
-
-        else if (identifier == "Color")
-        {
-            rdcolor *color = new rdcolor(this);
-            if (!color->parse(current_statement))
-                return false;
-            color->optype = RDVIEW_OPTYPE_COLOR;
-            this->operations.push_back(color);
-        }   
-
-        else if (identifier == "Point")
-        {
-            rdpoint *point = new rdpoint(this);
-            if (!point->parse(current_statement))
-                return false;
-            point->optype = RDVIEW_OPTYPE_POINT;
-            this->operations.push_back(point);
-        }
-
-        else if (identifier == "Line")
-        {
-            rdline *line = new rdline(this);
-            if (!line->parse(current_statement))
-                return false;
-            line->optype = RDVIEW_OPTYPE_LINE;
-            this->operations.push_back(line);
-        }
-
-        else if (identifier == "Circle")
-        {
-            rdcircle *circle = new rdcircle(this);
-            if (!circle->parse(current_statement))
-                return false;
-            circle->optype = RDVIEW_OPTYPE_CIRCLE;
-            this->operations.push_back(circle);
-        }
-
-        else if (identifier == "Fill")
-        {
-            rdflood *flood = new rdflood(this);
-            if (!flood->parse(current_statement))
-                return false;
-            flood->optype = RDVIEW_OPTYPE_FLOOD;
-            this->operations.push_back(flood);
-        }
-
-        else if (identifier == "WorldBegin")
-        {
-            rdworldbegin *worldbegin = new rdworldbegin(this);
-            if (!worldbegin->parse(current_statement))
-                return false;
-            worldbegin->optype = RDVIEW_OPTYPE_WORLDBEGIN;
-            this->operations.push_back(worldbegin);
-        }
-
-        else if (identifier == "WorldEnd")
-        {
-
-            rdworldend *worldend = new rdworldend(this);
-            if (!worldend->parse(current_statement))
-                return false;
-            worldend->optype = RDVIEW_OPTYPE_WORLDEND;
-            this->operations.push_back(worldend);
-
-        }
-
-        else if (identifier == "CameraEye")
-        {
-
-            rdcameraeye *cameraeye = new rdcameraeye(this);
-            if (!cameraeye->parse(current_statement))
-                return false;
-            cameraeye->optype = RDVIEW_OPTYPE_CAMERAEYE;
-            this->operations.push_back(cameraeye);
-
-        }
-
-        else if (identifier == "CameraAt")
-        {
-
-            rdcameraat *cameraat = new rdcameraat(this);
-            if (!cameraat->parse(current_statement))
-                return false;
-            cameraat->optype = RDVIEW_OPTYPE_CAMERAAT;
-            this->operations.push_back(cameraat);
-
-        }
-
-        else if (identifier == "CameraUp")
-        {
-
-            rdcameraup *cameraup = new rdcameraup(this);
-            if (!cameraup->parse(current_statement))
-                return false;
-            cameraup->optype = RDVIEW_OPTYPE_CAMERAUP;
-            this->operations.push_back(cameraup);
-
-        }
-
-        else if (identifier == "Translate")
-        {
-            rdtranslation *translation = new rdtranslation(this);
-            if (!translation->parse(current_statement))
-                return false;
-            translation->optype = RDVIEW_OPTYPE_TRANSLATION;
-            this->operations.push_back(translation);
-        }
-
-        else if (identifier == "Scale")
-        {
-            rdscale *scale = new rdscale(this);
-            if (!scale->parse(current_statement))
-                return false;
-            scale->optype = RDVIEW_OPTYPE_SCALE;
-            this->operations.push_back(scale);
-        }
-
-        else if (identifier == "Cube")
-        {
-
-            rdcube *cube = new rdcube(this);
-            if (!cube->parse(current_statement))
-                return false;
-            cube->optype = RDVIEW_OPTYPE_CUBE;
-            this->operations.push_back(cube);
-
-        }
-
-        else if (identifier == "CameraFOV")
-        {
-            rdcamerafov *camerafov = new rdcamerafov(this);
-            if (!camerafov->parse(current_statement))
-                return false;
-            camerafov->optype = RDVIEW_OPTYPE_CAMERAFOV;
-            this->operations.push_back(camerafov);
-        }
-
-        else
-        {
-            current_statement->print_unknown();
-        }
-
-        idx++;
+        current_statement = &this->statements[this->parse_index];
+        rdoperation *op = this->create_operation(current_statement);
+        if (op != NULL) this->operations.push_back(op);
+        this->parse_index++;
     }
 
     return true;

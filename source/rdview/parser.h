@@ -34,6 +34,15 @@
 #define RDVIEW_OPTYPE_ROTATION      16
 #define RDVIEW_OPTYPE_CUBE          17
 #define RDVIEW_OPTYPE_CAMERAFOV     18
+#define RDVIEW_OPTYPE_XFORMPUSH     19
+#define RDVIEW_OPTYPE_XFORMPOP      20
+#define RDVIEW_OPTYPE_SPHERE        21
+#define RDVIEW_OPTYPE_OBJECTBEGIN   22
+#define RDVIEW_OPTYPE_OBJECTEND     23
+#define RDVIEW_OPTYPE_OBJECTINST    24
+#define RDVIEW_OPTYPE_POLYSET       25
+#define RDVIEW_OPTYPE_CONE          26
+#define RDVIEW_OPTYPE_CYLINDER      27
 
 #include <rdview/operations.h>
 #include <rdview/statement.h>
@@ -56,6 +65,8 @@ class rdview
         bool init();
         bool begin();
         void render();
+
+        rdoperation* create_operation(rdstatement* stm);
 
     public:
         void rd_point_pipeline(v3 point, bool move);
@@ -81,6 +92,10 @@ class rdview
         m4 world_to_camera;
         m4 camera_to_clip;
         m4 clip_to_device;
+
+        size_t parse_index = 0;
+
+        m4 current_transform;
         std::vector<m4> transform_stack;
 
         std::string title;
@@ -89,6 +104,7 @@ class rdview
 
         renderable_device *active_device;
 
+        std::vector<rdobject> objects;
         std::vector<std::string> source_lines;
         std::vector<rdstatement> statements;
         std::vector<rdoperation*> operations;

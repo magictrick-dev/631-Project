@@ -2,6 +2,7 @@
 #define RDVIEW_OPERATIONS_H
 #include <core.h>
 #include <string>
+#include <vector>
 
 // --- Base Operation Class ----------------------------------------------------
 //
@@ -16,6 +17,20 @@ class rdoperation
 
         u32             optype                  = NULL;
         void           *rdview_parent           = NULL;
+};
+
+// --- RD Objects --------------------------------------------------------------
+//
+// Contains routines for objects.
+//
+
+class rdobject
+{
+    public:
+        inline void run() { for (rdoperation* op : operations) op->execute(); };
+
+        std::string name;
+        std::vector<rdoperation*> operations;
 };
 
 // --- Operations --------------------------------------------------------------
@@ -189,6 +204,18 @@ class rdscale : public rdoperation
         f32 z;
 };
 
+class rdrotate : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdrotate(void *parent);
+
+    i32 axis;
+    f32 theta;
+
+};
+
 class rdcube : public rdoperation
 {
     public:
@@ -207,6 +234,107 @@ class rdcamerafov : public rdoperation
 
     f32 fov;
 
+};
+
+class rdxformpush : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdxformpush(void *parent);
+};
+
+class rdxformpop : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdxformpop(void *parent);
+};
+
+class rdsphere : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdsphere(void *parent);
+
+    f32 zmin;
+    f32 zmax;
+    f32 r;
+    f32 theta;
+
+};
+
+class rdobjectbegin : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdobjectbegin(void *parent);
+
+        rdobject    object;
+        size_t      parse_index;
+
+};
+
+class rdobjectend : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdobjectend(void *parent);
+};
+
+class rdobjectinstance : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdobjectinstance(void *parent);
+
+    std::string object_name;
+    rdobject *object = NULL;
+
+};
+
+class rdpolyset : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdpolyset(void *parent);
+
+        std::string type;
+        i32 verts;
+        i32 fc;
+        std::vector<v3> points;
+        std::vector<std::vector<i32>> faces;
+};
+
+class rdcone : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcone(void *parent);
+
+        f32 h;
+        f32 r;
+        f32 theta;
+};
+
+class rdcylinder : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdcylinder(void *parent);
+
+    f32 r;
+    f32 zmin;
+    f32 zmax;
+    f32 theta;
 };
 
 #endif

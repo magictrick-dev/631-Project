@@ -1,5 +1,6 @@
 #ifndef J5_CORE_PRIMITIVES_H
 #define J5_CORE_PRIMITIVES_H
+#include <cassert>
 #include <cstdint>
 
 typedef uint8_t     u8;
