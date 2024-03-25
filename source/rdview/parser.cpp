@@ -26,13 +26,7 @@ rd_point_pipeline(v3 point, bool move)
     result.y /= result.w;
     result.z /= result.w;
 
-    if (move)
-    {
-        this->rd_point_state = result;
-        return;
-    }
-
-    set_point(this->active_device, h_point.x, h_point.y, h_point.z, this->draw_color);
+    set_point(this->active_device, result.x, result.y, result.z, this->draw_color);
     this->rd_point_state = result;
 
 }
@@ -52,7 +46,7 @@ rd_line_pipeline(v3 point, bool move)
     result.y /= result.w;
     result.z /= result.w;
 
-    std::cout << result << std::endl;
+    //std::cout << result << std::endl;
 
     if (move == true)
     {
@@ -213,7 +207,7 @@ begin()
     for (; idx < this->operations.size(); idx++)
     {
 
-        if (this->operations[idx]->optype == RDVIEW_OPTYPE_WORLDBEGIN)
+        if (this->operations[idx]->optype == RDVIEW_OPTYPE_FRAMEBEGIN)
         {
             this->start = idx;
             return true;
@@ -471,7 +465,7 @@ create_operation(rdstatement *current_statement)
         rdpolyset *poly = new rdpolyset(this);
         if (!poly->parse(current_statement))
             return NULL;
-        poly->optype = RDVIEW_OPTYPE_OBJECTINST;
+        poly->optype = RDVIEW_OPTYPE_POLYSET;
         return poly;
     }
 
@@ -492,6 +486,36 @@ create_operation(rdstatement *current_statement)
             return NULL;
         cylinder->optype = RDVIEW_OPTYPE_CYLINDER;
         return cylinder;
+
+    }
+
+    else if (identifier == "FrameBegin")
+    {
+        rdframebegin *framebegin = new rdframebegin(this);
+        if (!framebegin->parse(current_statement))
+            return NULL;
+        framebegin->optype = RDVIEW_OPTYPE_FRAMEBEGIN;
+        return framebegin;
+
+    }
+
+    else if (identifier == "FrameEnd")
+    {
+        rdframeend *frameend= new rdframeend(this);
+        if (!frameend->parse(current_statement))
+            return NULL;
+        frameend->optype = RDVIEW_OPTYPE_FRAMEEND;
+        return frameend;
+
+    }
+
+    else if (identifier == "PointSet")
+    {
+        rdpointset *ps = new rdpointset(this);
+        if (!ps->parse(current_statement))
+            return NULL;
+        ps->optype = RDVIEW_OPTYPE_POINTSET;
+        return ps;
 
     }
 

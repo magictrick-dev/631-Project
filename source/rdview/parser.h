@@ -43,6 +43,9 @@
 #define RDVIEW_OPTYPE_POLYSET       25
 #define RDVIEW_OPTYPE_CONE          26
 #define RDVIEW_OPTYPE_CYLINDER      27
+#define RDVIEW_OPTYPE_FRAMEBEGIN    28
+#define RDVIEW_OPTYPE_FRAMEEND      29
+#define RDVIEW_OPTYPE_POINTSET      30
 
 #include <rdview/operations.h>
 #include <rdview/statement.h>

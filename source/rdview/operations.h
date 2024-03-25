@@ -337,4 +337,35 @@ class rdcylinder : public rdoperation
     f32 theta;
 };
 
+class rdframebegin : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdframebegin(void *parent);
+
+        i32             frame_number;
+        rdobject        operations;
+};
+
+class rdframeend : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdframeend(void *parent);
+};
+
+class rdpointset : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdpointset(void *parent);
+
+        std::string type;
+        i32 verts;
+        std::vector<v3> points;
+};
+
 #endif

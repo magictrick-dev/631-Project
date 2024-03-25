@@ -23,6 +23,10 @@ class rdstatement
             std::cout << "Warning(" << this->number << "):\n"
                 << "    Token: " << this->tokens[0] << " is an unrecognized symbol."
                 << std::endl;
+            std::cout << "    ";
+            for (size_t i = 0; i < tokens.size(); ++i)
+                std::cout << tokens[i] << " ";
+            std::cout << std::endl;
         }
 
         inline void         print_error(std::string e) const

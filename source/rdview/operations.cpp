@@ -455,10 +455,6 @@ execute()
             rdv->farp, ((f32)rdv->width / (f32)rdv->height));
     rdv->clip_to_device = m4::create_clip_to_device(rdv->width, rdv->height);
 
-    std::cout << "World to Camera:\n" << rdv->world_to_camera << std::endl << std::endl;
-    std::cout << "Camera to Clip:\n" << rdv->camera_to_clip << std::endl << std::endl;
-    std::cout << "Clip to Device:\n" << rdv->clip_to_device << std::endl << std::endl;
-
     // Reset the transform stack.
     rdv->transform_stack.clear();
 
@@ -1292,21 +1288,6 @@ parse(void *statement)
     std::string name = rdview_parser_keyword_dequote(stm[1]);
     this->object_name = name;
 
-    for (rdobject& obj: rdv->objects)
-    {
-        if (obj.name == this->object_name)
-        {
-            this->object = &obj;
-            break;
-        }
-    }
-
-    if (this->object == NULL)
-    {
-        stm.print_error("Invoking an instance of an object that has not yet been defined.");
-        return false;
-    }
-
     return true;
 
 }
@@ -1316,7 +1297,14 @@ execute()
 {
 
     rdview *rdv = (rdview*)this->rdview_parent;
-    this->object->run();
+    for (size_t i = 0; i < rdv->objects.size(); ++i)
+    {
+        if (rdv->objects[i].name == this->object_name)
+        {
+            rdv->objects[i].run();
+            break;
+        }
+    }
 
     return;
 
@@ -1409,7 +1397,7 @@ parse(void *statement)
         rdv->parse_index++;
 
     }
-    rdv->parse_index--;
+    rdv->parse_index;
     return true;
 
 }
@@ -1630,3 +1618,231 @@ execute()
     return;
 
 }
+
+// --- RDFrameBegin ------------------------------------------------------------
+
+rdframebegin::
+rdframebegin(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdframebegin::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    // Check for correct number of parameters.
+    if (stm.count() != 2)
+    {
+        stm.print_error("The number of arguments for frame begin is incorrect.");
+        return false;
+    }
+ 
+    this->frame_number = std::stoi(stm[1]);
+
+    rdv->parse_index++;
+    while (rdv->parse_index < rdv->statements.size())
+    {
+        
+        // Get the current statement.
+        rdstatement *current_statement = &rdv->statements[rdv->parse_index];
+
+        // If its the object end, we're done.
+        if (current_statement->get_identifier() == "FrameEnd")
+        {
+            break;
+        }
+
+        // Otherwise, move that parse index for the parser.
+        else
+        {
+            rdv->parse_index++;
+        }
+        
+        // Finally, create the operation adn push it back.
+        rdoperation *objop = rdv->create_operation(current_statement);
+        if (objop != NULL)
+            this->operations.operations.push_back(objop);
+    }
+    rdv->parse_index--;
+
+#if 0
+    // Go through all the operations.
+    bool valid = true;
+    for (size_t idx = this->parse_index; idx < rdv->statements.size(); ++idx)
+    {
+
+        // Get the current statement.
+        rdstatement *current_statement = &rdv->statements[idx];
+
+        // No nested object begins!
+        if (current_statement->get_identifier() != "ObjectBegin")
+        {
+            current_statement->print_error("Nested object definitions are not allowed!");
+            valid = false;
+            break;
+        }
+
+        // If its the object end, we're done.
+        if (current_statement->get_identifier() == "ObjectEnd")
+            break;
+
+        // Otherwise, move that parse index for the parser.
+        else
+        {
+            rdv->parse_index++;
+        }
+
+        // Finally, create the operation adn push it back.
+        rdoperation *objop = rdv->create_operation(current_statement);
+        if (objop != NULL)
+            this->object.operations.push_back(objop);
+
+    }
+
+    // If we encounter cases that cant happen, we simply return false.
+    if (valid == false)
+        return false;
+
+
+    // Push back the object into the list of objects. We do this outside of the
+    // execute because this is a top-to-bottom accessor.
+    rdv->objects.push_back(this->object);    
+
+#endif
+    return true;
+
+}
+
+void rdframebegin::
+execute()
+{
+    this->operations.run();
+}
+
+// --- Object End --------------------------------------------------------------
+
+rdframeend::
+rdframeend(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdframeend::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 1)
+    {
+        stm.print_error("The number of arguments for object end is incorrect.");
+        return false;
+    }
+ 
+    return true;
+
+}
+
+void rdframeend::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    Sleep(14);
+    set_fill(rdv->active_device, rdv->canvas_color);
+    return;
+
+}
+
+// --- Point Set ---------------------------------------------------------------
+
+rdpointset::
+rdpointset(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdpointset::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    // Check for correct number of parameters.
+    if (stm.count() != 3)
+    {
+        stm.print_error("The number of arguments for pointset is incorrect.");
+        return false;
+    }
+ 
+    std::string type = rdview_parser_keyword_dequote(stm[1]);
+    this->type = type;
+    assert(type == "P");
+
+    this->verts = std::stoi(stm[2]);
+
+    // We need to look ahead now.
+    size_t vidx = 0;
+    while (rdv->parse_index < rdv->statements.size())
+    {
+        
+        // Get the current statement.
+        rdstatement &current_statement = rdv->statements[rdv->parse_index];
+
+        if (vidx >= this->verts)
+            break;
+
+        // Now check the verts.
+        if (this->type == "P")
+        {
+            f32 x, y, z;
+            x = std::stof(current_statement[0]);
+            y = std::stof(current_statement[1]);
+            z = std::stof(current_statement[2]);
+            this->points.push_back({x, y, z});
+        }
+        else
+        {
+            assert(!"Unimplemented");
+        }
+
+        vidx++;
+        rdv->parse_index++;
+
+    }
+    
+    return true;
+
+}
+
+void rdpointset::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    rdv->rd_point_pipeline(this->points[0], false);
+    for (size_t i = 1; i < points.size(); ++i)
+    {
+        rdv->rd_point_pipeline(this->points[i], false);
+    }
+
+    return;
+
+};
