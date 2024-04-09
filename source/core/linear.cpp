@@ -440,9 +440,9 @@ m4 m4::
 create_clip_to_device(int width, int height)
 {
     m4 T = m4::create_identity();
-    T.rows[0][0] = width;
-    T.rows[1][1] = -height;
-    T.rows[1][3] = height;
+    T.rows[0][0] = (width - 1);
+    T.rows[1][1] = -(height - 1);
+    T.rows[1][3] = height - 1;
     return T;
 }
 

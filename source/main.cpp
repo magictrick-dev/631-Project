@@ -46,6 +46,9 @@ main(int argc, char ** argv)
     if (!render_description.begin())
         return 1;
 
+    // Create the depthbuffer using the render description.
+    create_depthbuffer(render_description.width, render_description.height);
+
     if (render_description.device == RDVIEW_DEVICE_WINDOW)
     {
 
@@ -55,9 +58,6 @@ main(int argc, char ** argv)
             render_description.height
         };
 
-        create_depthbuffer(render_description.width, render_description.height);
-
-        //bool is_double_buffered = render_description.mode == RDVIEW_DRAW_TYPE_DOUBLE;
         bool is_double_buffered = false;
 
         if (!window.init_window(is_double_buffered))
@@ -69,7 +69,6 @@ main(int argc, char ** argv)
         Sleep(500);
 
         // Okay, now we can process the operations.
-        //rdview_source_run(&current_configuration);
         window.set_fill(render_description.canvas_color);
         render_description.render();
 
