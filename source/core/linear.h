@@ -3,47 +3,12 @@
 #define LINEAR_DEFINE_OSTREAM
 #include <core/primitives.h>
 
-struct v2;
 struct v3;
 struct v4;
 struct m4;
 
-// --- Vector 2D ---------------------------------------------------------------
-
-struct v2
-{
-    
-    union
-    {
-        f32 elements[2];
-
-        struct
-        {
-            f32 x;
-            f32 y;
-        };
-
-        struct
-        {
-            f32 width;
-            f32 height;
-        };
-
-    };
-
-    v2&          operator*=(const f32& rhs);
-    v2&          operator+=(const v2&  rhs);
-    v2&          operator-=(const v2&  rhs);
-    f32&         operator[](size_t idx);
-    const f32&   operator[](size_t idx) const;
-
-};
-
-
-v2 operator*(const v2& lhs, const f32& rhs);
-v2 operator*(const f32& lhs, const v2& rhs);
-v2 operator+(const v2& lhs, const v2& rhs);
-v2 operator-(const v2& lhs, const v2& rhs);
+v4 parameterize(v4 a, v4 b, f32 t);
+v4 homogenize(v4 h);
 
 // --- Vector 3D ---------------------------------------------------------------
 
@@ -66,18 +31,6 @@ struct v3
             f32 r;
             f32 g;
             f32 b;
-        };
-
-        struct
-        {
-            v2 xy;
-            f32 _d0;
-        };
-
-        struct
-        {
-            f32 _d1;
-            v2 yz;
         };
 
     };
@@ -114,35 +67,16 @@ struct v4
 
         struct
         {
-            f32 r;
-            f32 g;
-            f32 b;
-            f32 a;
-        };
-
-        struct
-        {
             v3 xyz;
             f32 _d0;
         };
 
         struct
         {
-            v2 xy;
-            v2 zw;
-        };
-
-        struct
-        {
-            f32 _d1;
-            v3 yzw;
-        };
-
-        struct
-        {
-            f32 _d2;
-            v2 yz;
-            f32 _d3;
+            f32 r;
+            f32 g;
+            f32 b;
+            f32 a;
         };
 
     };
@@ -221,7 +155,6 @@ m4 operator*(const m4& lhs, const m4& rhs);
 
 #ifdef LINEAR_DEFINE_OSTREAM
 #include <iostream>
-std::ostream& operator<<(std::ostream& out, const v2& v);
 std::ostream& operator<<(std::ostream& out, const v3& v);
 std::ostream& operator<<(std::ostream& out, const v4& v);
 std::ostream& operator<<(std::ostream& out, const m4& m);

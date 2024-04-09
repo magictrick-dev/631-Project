@@ -10,6 +10,8 @@
 #include <sstream>
 #include <vector>
 
+
+
 // --- RDView Pipelines --------------------------------------------------------
 
 void rdview::
@@ -20,14 +22,18 @@ rd_point_pipeline(v3 point, bool move)
     h_point.xyz = point;
     h_point.w   = 1.0f;
 
-    //v4 result = this->world_to_camera * this->camera_to_clip * this->clip_to_device * h_point;
     v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * this->current_transform * h_point;
-    result.x /= result.w;
-    result.y /= result.w;
-    result.z /= result.w;
+    if (result.w >= 0)
+    {
+        result.x /= result.w;
+        result.y /= result.w;
+        result.z /= result.w;
+        result.w /= result.w;
 
-    set_point(this->active_device, result.x, result.y, result.z, this->draw_color);
-    this->rd_point_state = result;
+        set_point(this->active_device, result.x, result.y, result.z, this->draw_color);
+        this->rd_point_state = result;
+    }
+
 
 }
 
@@ -40,13 +46,7 @@ rd_line_pipeline(v3 point, bool move)
     h_point.xyz = point;
     h_point.w   = 1.0f;
 
-    //v4 result = this->world_to_camera * this->camera_to_clip * this->clip_to_device * h_point;
-    v4 result = this->clip_to_device * this->camera_to_clip * this->world_to_camera * this->current_transform * h_point;
-    result.x /= result.w;
-    result.y /= result.w;
-    result.z /= result.w;
-
-    //std::cout << result << std::endl;
+    v4 result = this->camera_to_clip * this->world_to_camera * this->current_transform * h_point;
 
     if (move == true)
     {
@@ -55,13 +55,42 @@ rd_line_pipeline(v3 point, bool move)
     }
     else
     {
-        set_line(this->active_device, this->rd_line_state.x, result.x, this->rd_line_state.y,
-                result.y, this->rd_line_state.z, result.z, this->draw_color);
+        // this->clip_to_device   
+
+        v4 a = this->rd_line_state;
+        v4 b = result;
+
+        a.x /= a.w;
+        a.y /= a.w;
+        a.z /= a.w;
+        a.w /= a.w;
+
+        b.x /= b.w;
+        b.y /= b.w;
+        b.z /= b.w;
+        b.w /= b.w;
+
+        std::cout << "pre: " << a << " " << b << std::endl;
+        if (line_clip(&a, &b))
+        {
+            std::cout << "aft: " << a << " " << b << std::endl;
+            v4 final_a = this->clip_to_device * a;
+            v4 final_b = this->clip_to_device * b;
+
+            std::cout << "pre: " << final_a << " " << final_b << std::endl;
+            set_line(this->active_device,
+                    final_a.x, final_b.x,
+                    final_a.y, final_b.y,
+                    final_a.z, final_b.z,
+                    this->draw_color);
+        }
+
+        this->rd_line_state = result;
+
     }
 
     //set_line(this->active_device, 100, 500, 100, 300, 0, 0, this->draw_color);
-
-    this->rd_line_state = result;
+    //this->rd_line_state = result;
 
 }
 

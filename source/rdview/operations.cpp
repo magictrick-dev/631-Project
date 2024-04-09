@@ -1723,6 +1723,8 @@ parse(void *statement)
 void rdframebegin::
 execute()
 {
+    rdview *rdv = (rdview*)this->rdview_parent;
+    set_fill(rdv->active_device, rdv->canvas_color);
     this->operations.run();
 }
 
@@ -1761,7 +1763,6 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
     Sleep(14);
-    set_fill(rdv->active_device, rdv->canvas_color);
     return;
 
 }

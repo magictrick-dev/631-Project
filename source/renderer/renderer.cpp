@@ -157,6 +157,28 @@ set_line(renderable_device *device, i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 
 
 }
 
+
+void
+set_line_dda(renderable_device *device, dda_vertex v1, dda_vertex v2, v3 color, m4 otw, m4 wtc, m4 ctc, m4 ctd)
+{
+#if 0
+    int dx = (int)(v2.position.x - v1.position.x);
+    int dy = (int)(v2.position.y - v1.position.y);
+
+    int n_steps = max(dx, dy);
+    
+    for (size_t n = 0; n <= n_steps; ++n)
+    {
+        f32 t = (f32)n / (f32)n_steps;
+        v4 p = v1.position + (t * (v2.position - v2.position));
+        
+        f32 *zb = get_depthbuffer();
+        device->set_pixel((int)p.x, (int)p.y, (int)p.z, color);       
+    }
+#endif
+
+}
+
 // --- Bresenham's Circle Algorithm --------------------------------------------
 //
 // Surprisingly easier than the line algorithm.
@@ -306,5 +328,138 @@ set_flood(renderable_device *device, i32 x, i32 y, i32 z, v3 color)
     u32 seed = device->get_pixel(x, y, z);
     fff4(device, x, x, y, seed, color);
 
+}
+
+bool
+line_clip(v4 *a, v4 *b)
+{
+
+    v4& point_a = *a;
+    v4& point_b = *b;
+
+    f32 ac[6] = {
+        point_a.x, point_a.w - point_a.x,
+        point_a.y, point_a.w - point_a.y,
+        point_a.z, point_a.w - point_a.z,
+    };
+
+    f32 bc[6] = {
+        point_b.x, point_b.w - point_b.x,
+        point_b.y, point_b.w - point_b.y,
+        point_b.z, point_b.w - point_b.z,
+
+    };
+
+    bool ai[6] = {
+        (point_a.x < 0), ((point_a.w - point_a.x) < 0),
+        (point_a.y < 0), ((point_a.w - point_a.y) < 0),
+        (point_a.z < 0), ((point_a.w - point_a.z) < 0)
+    };
+
+    bool bi[6] = {
+        (point_b.x < 0), ((point_b.w - point_b.x) < 0),
+        (point_b.y < 0), ((point_b.w - point_b.y) < 0),
+        (point_b.z < 0), ((point_b.w - point_b.z) < 0)
+    };
+
+    u32 kode0 = 0x00;
+    u32 kode1 = 0x00;
+    for (size_t i = 0; i < 6; ++i)
+    {
+        kode0 |= (ai[i]) << i;
+        kode1 |= (bi[i]) << i;
+    }
+
+    u32 kode_overlap = kode0 & kode1;
+    u32 kode_union = kode0 | kode1;
+
+    // Trivial reject.
+    if (kode_overlap)
+    {
+        return false;
+    }
+    
+    // Trivial accept.
+    else if (!(kode_union))
+    {
+        return true;
+    }
+    
+    // Non-trivial check.
+    f32 alpha0 = 0.0f;
+    f32 alpha1 = 1.0f;
+    for (size_t i = 0; i < 6; ++i)
+    {
+        bool intersection = ((kode_union >> i) & 0x1);
+
+        if (!intersection)
+            continue;
+
+        f32 alpha = (ac[i]) / (ac[i] - bc[i]);
+
+        u32 mask = 0x1 << i;
+        if (kode0 & mask)
+        {
+            //alpha0 = (alpha <= alpha0) ? alpha0 : alpha;
+            alpha0 = max(alpha0, alpha);
+        }
+        else
+        {
+            //alpha1 = (alpha <= alpha1) ? alpha : alpha1;
+            alpha1 = min(alpha1, alpha);
+        }
+
+        if (alpha1 < alpha0)
+            return false;
+
+    }
+
+    std::cout << "alpha0: " << alpha0 << " alpha1: " << alpha1 << std::endl;
+
+    // Finally, our line is done.
+    point_a = point_a + (alpha0 * (point_b - point_a));
+    point_b = point_a + (alpha1 * (point_b - point_a));
+
+    *a = point_a;
+    *b = point_b;
+
+    return true;
+
+}
+
+static f32*     depth_buffer        = NULL;
+static u32      depth_buffer_width  = 0;
+static u32      depth_buffer_height = 0;
+
+void
+create_depthbuffer(u32 width, u32 height)
+{
+    if (depth_buffer != NULL)
+    {
+        free(depth_buffer);
+    }
+
+    depth_buffer = (f32*)malloc(sizeof(float) * width * height);
+    depth_buffer_width = width;
+    depth_buffer_height = height;
+}
+
+f32*
+get_depthbuffer()
+{
+
+    return depth_buffer;
+
+}
+
+void
+clear_depthbuffer()
+{
+    f32* db = get_depthbuffer();
+    if (db != NULL)
+    {
+        for (size_t idx = 0; idx < depth_buffer_width * depth_buffer_height; ++idx)
+            depth_buffer[idx] = 1.0f;
+    }
 }
 

@@ -1,78 +1,13 @@
 #include <core/linear.h>
 #include <cmath>
 
-// --- Vector 2D ---------------------------------------------------------------
-
-const f32& v2::
-operator[](size_t idx) const
+v4 homogenize(v4 h)
 {
-    
-    return this->elements[idx];
-
-}
-
-f32& v2::
-operator[](size_t idx)
-{
-    
-    return this->elements[idx];
-
-}
-
-v2& v2::
-operator*=(const f32& rhs)
-{
-    this->x *= rhs;
-    this->y *= rhs;
-    return *this;
-}
-
-v2& v2::
-operator+=(const v2& rhs)
-{
-    this->x += rhs.x;
-    this->y += rhs.y;
-    return *this;
-}
-
-v2& v2::
-operator-=(const v2& rhs)
-{
-    this->x -= rhs.x;
-    this->y -= rhs.y;
-    return *this;
-}
-
-v2
-operator*(const v2& lhs, const f32& rhs)
-{
-    v2 result = lhs;
-    result *= rhs;
-    return result;
-}
-
-v2
-operator*(const f32& lhs, const v2& rhs)
-{
-    v2 result = rhs;
-    result *= lhs;
-    return result;
-}
-
-v2
-operator+(const v2& lhs, const v2& rhs)
-{
-    v2 result = lhs;
-    result += rhs;
-    return result;
-}
-
-v2
-operator-(const v2& lhs, const v2& rhs)
-{
-    v2 result = lhs;
-    result -= rhs;
-    return result;
+    h.x /= h.w;
+    h.y /= h.w;
+    h.z /= h.w;
+    h.w /= h.w;
+    return h;
 }
 
 // --- Vector 3D ---------------------------------------------------------------
@@ -180,9 +115,15 @@ operator*=(const f32& rhs)
 v4& v4::
 operator+=(const v4& rhs)
 {
+
+    
+
     this->x += rhs.x;
     this->y += rhs.y;
     this->z += rhs.z;
+
+    
+
     return *this;
 }
 
@@ -522,14 +463,6 @@ operator*(const m4& lhs, const v4& rhs)
 
 #ifdef LINEAR_DEFINE_OSTREAM
 #include <iostream>
-
-std::ostream&
-operator<<(std::ostream& out, const v2& v)
-{
-    out << "{ " << v.x << ", " << v.y << " }";
-    return out;
-}
-
 std::ostream&
 operator<<(std::ostream& out, const v3& v)
 {

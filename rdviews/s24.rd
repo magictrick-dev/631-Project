@@ -3,6 +3,7 @@ Display "Point Test" "Screen" "rgbsingle"
 CameraAt 0 1 0
 CameraUp 0 0 1
 
+FrameBegin 1
 WorldBegin
 
 Color 1.0 0.0 0.0
@@ -19,3 +20,4 @@ Color 1.0 0.0 1.0
 Point 7 7 6
 
 WorldEnd
+FrameEnd

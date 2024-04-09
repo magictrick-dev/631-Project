@@ -55,6 +55,8 @@ main(int argc, char ** argv)
             render_description.height
         };
 
+        create_depthbuffer(render_description.width, render_description.height);
+
         //bool is_double_buffered = render_description.mode == RDVIEW_DRAW_TYPE_DOUBLE;
         bool is_double_buffered = false;
 
