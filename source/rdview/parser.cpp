@@ -78,11 +78,16 @@ rd_line_pipeline(v3 point, bool move)
             v4 final_b = this->clip_to_device * b;
 
             std::cout << "pre: " << final_a << " " << final_b << std::endl;
+#if 0
             set_line(this->active_device,
                     final_a.x, final_b.x,
                     final_a.y, final_b.y,
                     final_a.z, final_b.z,
                     this->draw_color);
+#endif
+
+            set_line_dda(this->active_device, final_a, final_b, this->draw_color);
+
         }
 
         this->rd_line_state = result;

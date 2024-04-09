@@ -23,8 +23,9 @@ void    set_circle(renderable_device *device, i32 x, i32 y, i32 z, i32 r, v3 col
 void    set_flood(renderable_device *device, i32 x, i32 y, i32 z, v3 color);
 f32*    get_depthbuffer(u32 width, u32 height);
 void    create_depthbuffer(u32 width, u32 height);
+bool    set_depthbuffer(u32 x, u32 y, f32 value);
 void    clear_depthbuffer();
 bool    line_clip(v4 *a, v4 *b);
-void    set_line_dda(renderable_device *device, dda_vertex v1, dda_vertex v2, v3 color, m4 otw, m4 wtc, m4 ctc, m4 ctd);
+void    set_line_dda(renderable_device *device, v4 a, v4 b, v3 color);
 
 #endif

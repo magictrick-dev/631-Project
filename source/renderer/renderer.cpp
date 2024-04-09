@@ -159,23 +159,24 @@ set_line(renderable_device *device, i32 x1, i32 x2, i32 y1, i32 y2, i32 z1, i32 
 
 
 void
-set_line_dda(renderable_device *device, dda_vertex v1, dda_vertex v2, v3 color, m4 otw, m4 wtc, m4 ctc, m4 ctd)
+set_line_dda(renderable_device *device, v4 a, v4 b, v3 draw_color)
 {
-#if 0
-    int dx = (int)(v2.position.x - v1.position.x);
-    int dy = (int)(v2.position.y - v1.position.y);
+
+    int dx = b.x - a.x;
+    int dy = b.y - a.y;
 
     int n_steps = max(dx, dy);
     
     for (size_t n = 0; n <= n_steps; ++n)
     {
         f32 t = (f32)n / (f32)n_steps;
-        v4 p = v1.position + (t * (v2.position - v2.position));
-        
-        f32 *zb = get_depthbuffer();
-        device->set_pixel((int)p.x, (int)p.y, (int)p.z, color);       
+        //v4 p = v1.position + (t * (v2.position - v2.position));
+ 
+        v4 p = a + (t * (b - a));
+
+        if (set_depthbuffer(p.x, p.y, p.z))
+            device->set_pixel((int)p.x, (int)p.y, (int)p.z, draw_color);       
     }
-#endif
 
 }
 
@@ -463,3 +464,19 @@ clear_depthbuffer()
     }
 }
 
+bool
+set_depthbuffer(u32 width, u32 height, f32 value)
+{
+
+    f32 *db = get_depthbuffer();
+    assert(db != NULL);
+
+    f32 *v = &db[height * depth_buffer_width + width];
+    if (*v > value)
+        return false;
+    else
+        *v = value;
+
+    return true;
+
+}
