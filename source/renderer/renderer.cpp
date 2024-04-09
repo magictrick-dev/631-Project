@@ -418,11 +418,15 @@ line_clip(v4 *a, v4 *b)
     std::cout << "alpha0: " << alpha0 << " alpha1: " << alpha1 << std::endl;
 
     // Finally, our line is done.
-    point_a = point_a + (alpha0 * (point_b - point_a));
-    point_b = point_a + (alpha1 * (point_b - point_a));
+    v4 final_a = point_a;
+    v4 final_b = point_b;
+    final_a = point_a + (alpha0 * (point_b - point_a));
+    final_b = point_a + (alpha1 * (point_b - point_a));
 
-    *a = point_a;
-    *b = point_b;
+    std::cout << "during " << final_a << " " << final_b << std::endl;
+
+    *a = final_a;
+    *b = final_b;
 
     return true;
 
