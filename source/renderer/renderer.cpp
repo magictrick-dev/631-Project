@@ -162,20 +162,20 @@ void
 set_line_dda(renderable_device *device, v4 a, v4 b, v3 draw_color)
 {
 
-    int dx = b.x - a.x;
-    int dy = b.y - a.y;
+    int dx = (int)b.x - (int)a.x;
+    int dy = (int)b.y - (int)a.y;
 
-    int n_steps = max(dx, dy);
+    int n_steps = max(abs(dx), abs(dy));
     
     for (size_t n = 0; n <= n_steps; ++n)
     {
-        f32 t = (f32)n / (f32)n_steps;
+        f32 t = (f32)n / n_steps;
         //v4 p = v1.position + (t * (v2.position - v2.position));
  
         v4 p = a + (t * (b - a));
 
         if (set_depthbuffer(p.x, p.y, p.z))
-            device->set_pixel((int)p.x, (int)p.y, (int)p.z, draw_color);       
+            device->set_pixel(p.x, p.y, p.z, draw_color);       
     }
 
 }
@@ -415,7 +415,7 @@ line_clip(v4 *a, v4 *b)
 
     }
 
-    std::cout << "alpha0: " << alpha0 << " alpha1: " << alpha1 << std::endl;
+    //std::cout << "alpha0: " << alpha0 << " alpha1: " << alpha1 << std::endl;
 
     // Finally, our line is done.
     v4 final_a = point_a;
@@ -423,7 +423,7 @@ line_clip(v4 *a, v4 *b)
     final_a = point_a + (alpha0 * (point_b - point_a));
     final_b = point_a + (alpha1 * (point_b - point_a));
 
-    std::cout << "during " << final_a << " " << final_b << std::endl;
+    //std::cout << "during " << final_a << " " << final_b << std::endl;
 
     *a = final_a;
     *b = final_b;
@@ -447,6 +447,9 @@ create_depthbuffer(u32 width, u32 height)
     depth_buffer = (f32*)malloc(sizeof(float) * width * height);
     depth_buffer_width = width;
     depth_buffer_height = height;
+
+    clear_depthbuffer();
+
 }
 
 f32*
@@ -463,7 +466,7 @@ clear_depthbuffer()
     f32* db = get_depthbuffer();
     if (db != NULL)
     {
-        for (size_t idx = 0; idx < depth_buffer_width * depth_buffer_height; ++idx)
+        for (size_t idx = 0; idx < (depth_buffer_width * depth_buffer_height); ++idx)
             depth_buffer[idx] = 1.0f;
     }
 }
@@ -475,12 +478,14 @@ set_depthbuffer(u32 width, u32 height, f32 value)
     f32 *db = get_depthbuffer();
     assert(db != NULL);
 
-    f32 *v = &db[height * depth_buffer_width + width];
-    if (*v > value)
-        return false;
-    else
-        *v = value;
+    f32 *current_z = &db[height * depth_buffer_width + width];
+    //std::cout << *current_z << " " << value << std::endl;
+    if (value <= *current_z)
+    {
+        *current_z = value;
+        return true;
+    }
 
-    return true;
+    return false;
 
 }

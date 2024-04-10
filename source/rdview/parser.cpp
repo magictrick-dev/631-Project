@@ -30,7 +30,8 @@ rd_point_pipeline(v3 point, bool move)
         result.z /= result.w;
         result.w /= result.w;
 
-        set_point(this->active_device, result.x, result.y, result.z, this->draw_color);
+        if (set_depthbuffer(result.x, result.y, result.z))
+            set_point(this->active_device, result.x, result.y, result.z, this->draw_color);
         this->rd_point_state = result;
     }
 
@@ -70,23 +71,19 @@ rd_line_pipeline(v3 point, bool move)
         b.z /= b.w;
         b.w /= b.w;
 
-        std::cout << "pre: " << a << " " << b << std::endl;
         if (line_clip(&a, &b))
         {
-            std::cout << "aft: " << a << " " << b << std::endl;
             v4 final_a = this->clip_to_device * a;
             v4 final_b = this->clip_to_device * b;
-
-            std::cout << "pre: " << final_a << " " << final_b << std::endl;
 #if 0
             set_line(this->active_device,
                     final_a.x, final_b.x,
                     final_a.y, final_b.y,
                     final_a.z, final_b.z,
                     this->draw_color);
-#endif
-
+#else
             set_line_dda(this->active_device, final_a, final_b, this->draw_color);
+#endif
 
         }
 
@@ -550,6 +547,16 @@ create_operation(rdstatement *current_statement)
             return NULL;
         ps->optype = RDVIEW_OPTYPE_POINTSET;
         return ps;
+
+    }
+
+    else if (identifier == "Clipping")
+    {
+        rdclipping *clip = new rdclipping(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_CLIPPING;
+        return clip;
 
     }
 

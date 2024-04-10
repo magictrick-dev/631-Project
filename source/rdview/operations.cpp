@@ -955,6 +955,7 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
 
+#if 0
     // Draw x-axis.
     {
         size_t step = 0;
@@ -1012,6 +1013,61 @@ execute()
         y = this->r * sinf(DEGREES_TO_RADIANS(theta));
         rdv->rd_line_pipeline({y, 0.0f, x}, false);
     }
+#else
+
+
+    for (int j = 0; j < 16; ++j)
+    {
+    
+        for (int i = 0; i < 8; ++i)
+        {
+
+            f32 theta1 = (((f32)j)       / 16) * 360.0f;
+            f32 theta2 = (((f32)j+1)     / 16) * 360.0f;
+            f32 phi1   = ((((f32)i)      / 8) * 180.0f) - 90.0f;
+            f32 phi2   = ((((f32)i+1)    / 8) * 180.0f) - 90.0f;
+
+            // I am DTR.
+#define     DTR(t) DEGREES_TO_RADIANS(t)            
+
+            v4 p1 = { 
+                (this->r * cos(DTR(phi1)) * cos(DTR(theta1))),
+                (this->r * cos(DTR(phi1)) * sin(DTR(theta1))),
+                (this->r * sin(DTR(phi1))),
+                1.0f
+            };
+
+            v4 p2 = { 
+                (this->r * cos(DTR(phi2)) * cos(DTR(theta1))),
+                (this->r * cos(DTR(phi2)) * sin(DTR(theta1))),
+                (this->r * sin(DTR(phi2))),
+                1.0f
+            };
+
+            v4 p3 = { 
+                (this->r * cos(DTR(phi2)) * cos(DTR(theta2))),
+                (this->r * cos(DTR(phi2)) * sin(DTR(theta2))),
+                (this->r * sin(DTR(phi2))),
+                1.0f
+            };
+
+            v4 p4 = { 
+                (this->r * cos(DTR(phi1)) * cos(DTR(theta2))),
+                (this->r * cos(DTR(phi1)) * sin(DTR(theta2))),
+                (this->r * sin(DTR(phi1))),
+                1.0f
+            };
+
+            rdv->rd_line_pipeline(p1.xyz, true);
+            rdv->rd_line_pipeline(p2.xyz, false);
+            rdv->rd_line_pipeline(p3.xyz, false);
+            rdv->rd_line_pipeline(p4.xyz, false);
+            rdv->rd_line_pipeline(p1.xyz, false);
+
+        }
+
+    }
+#endif
 
     return;
 
@@ -1565,12 +1621,12 @@ execute()
     {
 
         f32 ctheta = (i / 20.0f) * this->theta;
-        f32 cx = cosf(DEGREES_TO_RADIANS(ctheta));
-        f32 cy = sinf(DEGREES_TO_RADIANS(ctheta));
+        f32 cx = this->r * cosf(DEGREES_TO_RADIANS(ctheta));
+        f32 cy = this->r * sinf(DEGREES_TO_RADIANS(ctheta));
 
         f32 ntheta = ((i + 1) / 20.0f) * this->theta;
-        f32 nx = cosf(DEGREES_TO_RADIANS(ntheta));
-        f32 ny = sinf(DEGREES_TO_RADIANS(ntheta));
+        f32 nx = this->r * cosf(DEGREES_TO_RADIANS(ntheta));
+        f32 ny = this->r * sinf(DEGREES_TO_RADIANS(ntheta));
 
         rdv->rd_line_pipeline({cx, cy, 0.0f}, true); 
         rdv->rd_line_pipeline({nx, ny, 0.0f}, false); 
@@ -1724,6 +1780,7 @@ void rdframebegin::
 execute()
 {
     rdview *rdv = (rdview*)this->rdview_parent;
+    clear_depthbuffer();
     set_fill(rdv->active_device, rdv->canvas_color);
     this->operations.run();
 }
@@ -1847,3 +1904,47 @@ execute()
     return;
 
 };
+
+// --- Clipping ----------------------------------------------------------------
+
+rdclipping::
+rdclipping(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdclipping::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 3)
+    {
+        stm.print_error("The number of arguments for clipping is incorrect.");
+        return false;
+    }
+ 
+    this->nearp = std::stof(stm[1]);
+    this->farp = std::stof(stm[2]);
+
+    return true;
+
+}
+
+void rdclipping::
+execute()
+{
+
+    
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->nearp  = this->nearp;
+    rdv->farp   = this->farp;
+
+    return;
+
+}

@@ -46,6 +46,7 @@
 #define RDVIEW_OPTYPE_FRAMEBEGIN    28
 #define RDVIEW_OPTYPE_FRAMEEND      29
 #define RDVIEW_OPTYPE_POINTSET      30
+#define RDVIEW_OPTYPE_CLIPPING      31
 
 #include <rdview/operations.h>
 #include <rdview/statement.h>

@@ -368,4 +368,15 @@ class rdpointset : public rdoperation
         std::vector<v3> points;
 };
 
+class rdclipping : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdclipping(void *parent);
+
+        f32 nearp;
+        f32 farp;
+};
+
 #endif
