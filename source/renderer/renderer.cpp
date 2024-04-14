@@ -497,31 +497,50 @@ set_depthbuffer(u32 width, u32 height, f32 value)
 #define POLY_CLIP_BACK      4
 #define POLY_CLIP_FRONT     5
 
-static attr_point   first_seen[6];
-static attr_point   last_seen[6];
-static bool         first_init[6];
+static attr_point               first_seen[6];
+static attr_point               last_seen[6];
+static bool                     first_init[6];
+static std::vector<attr_point>  clip_list;
+
+static void         clip_point(attr_point p, i32 stage);
+static attr_point   clip_intersect(attr_point a, attr_point b, i32 stage);
+static bool         clip_in_boundary(attr_point p, i32 stage);
+static bool         clip_is_crossing(attr_point a, attr_point b, i32 stage);
 
 i32
-poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& clip_list)
+poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
 {
     
-    // Initialize the init flags.
+    // Initialize.
+    clip_list.clear();
     for (size_t idx = 0; idx < 6; ++idx) first_init[idx] = false;
 
     // We go in deep.
     for (size_t idx = 0; idx < poly_list.size(); ++idx)
-    {
-
         clip_point(poly_list[idx], POLY_CLIP_LEFT);
 
+    // Final stage.
+    for (size_t idx = 0; idx < 6; ++idx)
+    {
+        if (first_init[idx] && clip_is_crossing(last_seen[idx], first_seen[idx], idx))
+        {
+            attr_point np = clip_intersect(last_seen[idx], first_seen[idx], idx);
+            clip_point(np, idx+1);
+            clip_list.push_back(np);
+        }
     }
 
-    return 0;
+    out = clip_list;
+
+    return out.size();
 }
 
-void
+static void
 clip_point(attr_point p, i32 stage)
 {
+
+    if (stage >= 5)
+        return;
 
     // Is this the first time we've seen a point?
     if (first_init[stage] == false)
@@ -533,61 +552,117 @@ clip_point(attr_point p, i32 stage)
     // Previous point exists.
     else
     {
-        if (is_crossing(p, last_seen[stage], stage))
+        if (clip_is_crossing(p, last_seen[stage], stage))
         {
-
+            attr_point np = clip_intersect(p, last_seen[stage], stage);
+            clip_point(np, stage+1);
         }
     }
 
     last_seen[stage] = p;
 
     // Check if it is in boundary.
-    if (in_boundary(p, stage))
+    if (clip_in_boundary(p, stage))
     {
-
+        clip_point(p, stage+1);
+        clip_list.push_back(p);
     }
 
 }
 
-b32
-in_boundary(attr_point p, i32 stage)
+static attr_point
+clip_intersect(attr_point a, attr_point b, i32 stage)
+{
+
+    f32 alpha_value = 0.0f;
+    f32 ac = 0.0f;
+    f32 bc = 0.0f;
+  
+    switch(stage)
+    {
+        case POLY_CLIP_LEFT:
+        {
+            //alpha_value = a.position.x / (a.position.x - b.position.x);
+            ac = a.position.x;
+            bc = b.position.x;
+            break;
+        };
+        case POLY_CLIP_RIGHT:
+        {
+            ac = a.position.w - a.position.x;
+            bc = b.position.w - b.position.x;
+            break;
+        };
+        case POLY_CLIP_BOTTOM:
+        {
+            ac = a.position.w - a.position.y;
+            bc = b.position.w - b.position.y;
+            break;
+        };
+        case POLY_CLIP_TOP:
+        {
+            ac = a.position.y;
+            bc = b.position.y;
+            break;
+        };
+        case POLY_CLIP_BACK:
+        {
+            ac = a.position.z;
+            bc = b.position.z;
+            break;
+        };
+        case POLY_CLIP_FRONT:
+        {
+            ac = a.position.w - a.position.z;
+            bc = b.position.w - b.position.z;
+            break;
+        };
+    };
+
+    alpha_value = ac / (ac - bc);
+    return interpolate_attributed_point(a, b, alpha_value);
+
+}
+
+static bool
+clip_in_boundary(attr_point p, i32 stage)
 {
 
     switch(stage)
     {
         case POLY_CLIP_LEFT:
         {
-            if (p.x >= 0.0f) return true;           
+            if (p.position.x >= 0.0f) return true;           
             else return false;
             break;
         };
         case POLY_CLIP_RIGHT:
         {
-            if (p.x <= 1.0f) return true;
+            if (p.position.x <= 1.0f) return true;
             else return false;
             break;
         };
         case POLY_CLIP_BOTTOM:
         {
-            if (p.y >= 0.0f) return true;
+            if (p.position.y >= 0.0f) return true;
             else return false;
             break;
         };
         case POLY_CLIP_TOP:
         {
-            if (p.y <= 1.0f) return true;
+            if (p.position.y <= 1.0f) return true;
             else return false;
             break;
         };
         case POLY_CLIP_BACK:
         {
-            if (p.z <= 1.0f) return true;
+            if (p.position.z <= 1.0f) return true;
             else return false;
             break;
         };
         case POLY_CLIP_FRONT:
         {
-            if (p.z >= 0.0f) return true;
+            if (p.position.z >= 0.0f) return true;
             else return false;
             break;
         };
@@ -599,10 +674,10 @@ in_boundary(attr_point p, i32 stage)
 
 }
 
-b32
-is_crossing(attr_point a, attr_point b, i32 stage)
+static bool
+clip_is_crossing(attr_point a, attr_point b, i32 stage)
 {
-    return in_boundary(a, stage) != in_boundary(b, stage);
+    return (clip_in_boundary(a, stage) != clip_in_boundary(b, stage));
 }
 
 void

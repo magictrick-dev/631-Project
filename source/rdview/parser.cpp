@@ -129,7 +129,15 @@ rd_poly_pipeline(attr_point p, bool end_flag)
             clip_list[i].position.w /= clip_list[i].position.w;
         }
 
-        scan_convert(clip_list);
+        //scan_convert(clip_list);
+#if 1
+        set_line_dda(this->active_device, clip_list[clip_list.size()-1].position, clip_list[0].position, this->draw_color);
+        for (size_t i = 1; i < clip_list.size(); ++i)
+        {
+            
+            set_line_dda(this->active_device, clip_list[i-1].position, clip_list[i].position, this->draw_color);
+        }
+#endif
 
     }
 

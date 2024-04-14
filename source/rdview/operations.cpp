@@ -800,31 +800,31 @@ execute()
     rdview *rdv = (rdview*)this->rdview_parent;
 
     // Front
-    rdv->rd_line_pipeline({-1.0f, -1.0f, 1.0f}, true);
-    rdv->rd_line_pipeline({1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_line_pipeline({1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_line_pipeline({-1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_line_pipeline({-1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f}, false);
 
     // Left
-    rdv->rd_line_pipeline({-1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_line_pipeline({-1.0f, 1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({-1.0f, -1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({-1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f}, false);
 
     // Bottom
-    rdv->rd_line_pipeline({-1.0f, -1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({1.0f, -1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f}, false);
 
     // Right
-    rdv->rd_line_pipeline({1.0f, -1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({1.0f, 1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f}, false);
 
     // Top
-    rdv->rd_line_pipeline({1.0f, 1.0f, -1.0f}, false);
-    rdv->rd_line_pipeline({-1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f}, true);
 
     return;
 
