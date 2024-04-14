@@ -96,6 +96,48 @@ rd_line_pipeline(v3 point, bool move)
 
 }
 
+void rdview::
+rd_poly_pipeline(attr_point p, bool end_flag)
+{
+
+    // Maintain the list of vertices.
+    static std::vector<attr_point> vertex_list;
+
+    // Compute the point and update the vertex position.
+    v4 result = this->camera_to_clip * this->world_to_camera * this->current_transform * p.position;
+    p.position = result;
+
+    // Place the vertex in the list.
+    vertex_list.push_back(p);
+
+    // If the end-flag is triggered, we need to render the polygon.
+    if (end_flag == false) return;
+
+    // Clip the polygon and if there is anything there, draw it.
+    std::vector<attr_point> clip_list;
+    if (poly_clip(vertex_list, clip_list))
+    {
+        
+        // Convert to device coordinates and homogenize.
+        for (size_t i = 0; i < clip_list.size(); ++i)
+        {
+            clip_list[i].position = this->clip_to_device * clip_list[i].position;
+
+            clip_list[i].position.x /= clip_list[i].position.w;
+            clip_list[i].position.y /= clip_list[i].position.w;
+            clip_list[i].position.z /= clip_list[i].position.w;
+            clip_list[i].position.w /= clip_list[i].position.w;
+        }
+
+        scan_convert(clip_list);
+
+    }
+
+    // Empty the vertex list once its rendered.
+    vertex_list.clear();
+
+};
+
 // --- RDView Parser Helpers ---------------------------------------------------
 
 void

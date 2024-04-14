@@ -1,1 +1,1 @@
-./bin/Debug/j5.exe ./rdviews/spheres.rd
+./bin/Debug/j5.exe ./rdviews/s33.rd

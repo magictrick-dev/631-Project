@@ -51,6 +51,7 @@
 #include <rdview/operations.h>
 #include <rdview/statement.h>
 #include <renderer/device.h>
+#include <renderer/renderer.h>
 
 void        rdview_parser_strip_whitespace(std::string &line);
 void        rdview_parser_rejoin_strings(std::vector<std::string>& lk_line);
@@ -75,6 +76,7 @@ class rdview
     public:
         void rd_point_pipeline(v3 point, bool move);
         void rd_line_pipeline(v3 point, bool move);
+        void rd_poly_pipeline(attr_point p, bool end_flag);
 
         v4  rd_line_state;
         v4  rd_point_state;

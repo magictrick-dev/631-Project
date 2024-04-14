@@ -1016,16 +1016,16 @@ execute()
 #else
 
 
-    for (int j = 0; j < 16; ++j)
+    for (int j = 0; j <= 20; ++j)
     {
     
-        for (int i = 0; i < 8; ++i)
+        for (int i = 0; i <= 10; ++i)
         {
 
-            f32 theta1 = (((f32)j)       / 16) * 360.0f;
-            f32 theta2 = (((f32)j+1)     / 16) * 360.0f;
-            f32 phi1   = ((((f32)i)      / 8) * 180.0f) - 90.0f;
-            f32 phi2   = ((((f32)i+1)    / 8) * 180.0f) - 90.0f;
+            f32 theta1 = (((f32)j)       / 20) * 360.0f;
+            f32 theta2 = (((f32)j+1)     / 20) * 360.0f;
+            f32 phi1   = ((((f32)i)      / 10) * 180.0f) - 90.0f;
+            f32 phi2   = ((((f32)i+1)    / 10) * 180.0f) - 90.0f;
 
             // I am DTR.
 #define     DTR(t) DEGREES_TO_RADIANS(t)            
