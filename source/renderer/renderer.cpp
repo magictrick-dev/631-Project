@@ -526,11 +526,16 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
         {
             attr_point np = clip_intersect(last_seen[idx], first_seen[idx], idx);
             clip_point(np, idx+1);
-            clip_list.push_back(np);
+            //clip_list.push_back(np);
         }
     }
 
     out = clip_list;
+
+    for (auto p : out)
+    {
+        std::cout << p.position << std::endl;
+    }
 
     return out.size();
 }
@@ -538,9 +543,6 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
 static void
 clip_point(attr_point p, i32 stage)
 {
-
-    if (stage >= 5)
-        return;
 
     // Is this the first time we've seen a point?
     if (first_init[stage] == false)
@@ -556,6 +558,7 @@ clip_point(attr_point p, i32 stage)
         {
             attr_point np = clip_intersect(p, last_seen[stage], stage);
             clip_point(np, stage+1);
+            clip_list.push_back(np);
         }
     }
 
@@ -565,7 +568,7 @@ clip_point(attr_point p, i32 stage)
     if (clip_in_boundary(p, stage))
     {
         clip_point(p, stage+1);
-        clip_list.push_back(p);
+        //clip_list.push_back(p);
     }
 
 }
@@ -593,25 +596,25 @@ clip_intersect(attr_point a, attr_point b, i32 stage)
             bc = b.position.w - b.position.x;
             break;
         };
-        case POLY_CLIP_BOTTOM:
-        {
-            ac = a.position.w - a.position.y;
-            bc = b.position.w - b.position.y;
-            break;
-        };
         case POLY_CLIP_TOP:
         {
             ac = a.position.y;
             bc = b.position.y;
             break;
         };
-        case POLY_CLIP_BACK:
+        case POLY_CLIP_BOTTOM:
+        {
+            ac = a.position.w - a.position.y;
+            bc = b.position.w - b.position.y;
+            break;
+        };
+        case POLY_CLIP_FRONT:
         {
             ac = a.position.z;
             bc = b.position.z;
             break;
         };
-        case POLY_CLIP_FRONT:
+        case POLY_CLIP_BACK:
         {
             ac = a.position.w - a.position.z;
             bc = b.position.w - b.position.z;
