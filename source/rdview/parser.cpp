@@ -61,29 +61,23 @@ rd_line_pipeline(v3 point, bool move)
         v4 a = this->rd_line_state;
         v4 b = result;
 
-        a.x /= a.w;
-        a.y /= a.w;
-        a.z /= a.w;
-        a.w /= a.w;
-
-        b.x /= b.w;
-        b.y /= b.w;
-        b.z /= b.w;
-        b.w /= b.w;
 
         if (line_clip(&a, &b))
         {
             v4 final_a = this->clip_to_device * a;
             v4 final_b = this->clip_to_device * b;
-#if 0
-            set_line(this->active_device,
-                    final_a.x, final_b.x,
-                    final_a.y, final_b.y,
-                    final_a.z, final_b.z,
-                    this->draw_color);
-#else
+
+            final_a.x = final_a.x / final_a.w;
+            final_a.y = final_a.y / final_a.w;
+            final_a.z = final_a.z / final_a.w;
+            final_a.w = final_a.w / final_a.w;
+
+            final_b.x = final_b.x / final_b.w;
+            final_b.y = final_b.y / final_b.w;
+            final_b.z = final_b.z / final_b.w;
+            final_b.w = final_b.w / final_b.w;
+
             set_line_dda(this->active_device, final_a, final_b, this->draw_color);
-#endif
 
         }
 
@@ -111,38 +105,42 @@ rd_poly_pipeline(attr_point p, bool end_flag)
     vertex_list.push_back(p);
 
     // If the end-flag is triggered, we need to render the polygon.
-    if (end_flag == false) return;
-
-    // Clip the polygon and if there is anything there, draw it.
-    std::vector<attr_point> clip_list;
-    if (poly_clip(vertex_list, clip_list))
+    if (end_flag == false)
+        return;
+    else
     {
         
-        // Convert to device coordinates and homogenize.
-        for (size_t i = 0; i < clip_list.size(); ++i)
-        {
-            clip_list[i].position = this->clip_to_device * clip_list[i].position;
-
-            clip_list[i].position.x /= clip_list[i].position.w;
-            clip_list[i].position.y /= clip_list[i].position.w;
-            clip_list[i].position.z /= clip_list[i].position.w;
-            clip_list[i].position.w /= clip_list[i].position.w;
-        }
-
-        //scan_convert(clip_list);
-#if 1
-        set_line_dda(this->active_device, clip_list[clip_list.size()-1].position, clip_list[0].position, this->draw_color);
-        for (size_t i = 1; i < clip_list.size(); ++i)
+        // Clip the polygon and if there is anything there, draw it.
+        std::vector<attr_point> clip_list;
+        if (poly_clip(vertex_list, clip_list))
         {
             
-            set_line_dda(this->active_device, clip_list[i-1].position, clip_list[i].position, this->draw_color);
-        }
+            // Convert to device coordinates and homogenize.
+            for (size_t i = 0; i < clip_list.size(); ++i)
+            {
+                clip_list[i].position = this->clip_to_device * clip_list[i].position;
+
+                clip_list[i].position.x /= clip_list[i].position.w;
+                clip_list[i].position.y /= clip_list[i].position.w;
+                clip_list[i].position.z /= clip_list[i].position.w;
+                clip_list[i].position.w /= clip_list[i].position.w;
+            }
+
+#if 1
+            // Draw the first line.
+            set_line_dda(this->active_device, clip_list[clip_list.size()-1].position,
+                    clip_list[0].position, this->draw_color);
+            // Draw the rest.
+            for (size_t i = 1; i < clip_list.size(); ++i)
+                set_line_dda(this->active_device, clip_list[i-1].position,
+                        clip_list[i].position, this->draw_color);
 #endif
 
-    }
+        }
 
-    // Empty the vertex list once its rendered.
-    vertex_list.clear();
+        // Empty the vertex list once its rendered.
+        vertex_list.clear();
+    }
 
 };
 

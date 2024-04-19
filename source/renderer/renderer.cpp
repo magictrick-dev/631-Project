@@ -331,6 +331,8 @@ set_flood(renderable_device *device, i32 x, i32 y, i32 z, v3 color)
 
 }
 
+// --- Line Clipping -----------------------------------------------------------
+
 bool
 line_clip(v4 *a, v4 *b)
 {
@@ -338,99 +340,91 @@ line_clip(v4 *a, v4 *b)
     v4& point_a = *a;
     v4& point_b = *b;
 
-    f32 ac[6] = {
-        point_a.x, point_a.w - point_a.x,
-        point_a.y, point_a.w - point_a.y,
-        point_a.z, point_a.w - point_a.z,
+    f32 bc0[6] = {
+        point_a.x,
+        point_a.w - point_a.x,
+        point_a.y,
+        point_a.w - point_a.y,
+        point_a.z,
+        point_a.w - point_a.z,
     };
 
-    f32 bc[6] = {
-        point_b.x, point_b.w - point_b.x,
-        point_b.y, point_b.w - point_b.y,
-        point_b.z, point_b.w - point_b.z,
-
+    f32 bc1[6] = {
+        point_b.x,
+        point_b.w - point_b.x,
+        point_b.y,
+        point_b.w - point_b.y,
+        point_b.z,
+        point_b.w - point_b.z,
     };
 
-    bool ai[6] = {
-        (point_a.x < 0), ((point_a.w - point_a.x) < 0),
-        (point_a.y < 0), ((point_a.w - point_a.y) < 0),
-        (point_a.z < 0), ((point_a.w - point_a.z) < 0)
-    };
-
-    bool bi[6] = {
-        (point_b.x < 0), ((point_b.w - point_b.x) < 0),
-        (point_b.y < 0), ((point_b.w - point_b.y) < 0),
-        (point_b.z < 0), ((point_b.w - point_b.z) < 0)
-    };
-
-    u32 kode0 = 0x00;
-    u32 kode1 = 0x00;
+    u32 kode0 = 0;
+    u32 kode1 = 0;
     for (size_t i = 0; i < 6; ++i)
     {
-        kode0 |= (ai[i]) << i;
-        kode1 |= (bi[i]) << i;
+        kode0 |= (bc0[i] <= 0.0f) << i;
+        kode1 |= (bc1[i] <= 0.0f) << i;
     }
 
     u32 kode_overlap = kode0 & kode1;
     u32 kode_union = kode0 | kode1;
-
-    // Trivial reject.
+    
     if (kode_overlap)
     {
         return false;
     }
-    
-    // Trivial accept.
-    else if (!(kode_union))
+    else if (!kode_union)
     {
         return true;
     }
-    
+
     // Non-trivial check.
     f32 alpha0 = 0.0f;
     f32 alpha1 = 1.0f;
     for (size_t i = 0; i < 6; ++i)
     {
-        bool intersection = ((kode_union >> i) & 0x1);
 
+        bool intersection = ((kode_union >> i) & 0x1);
         if (!intersection)
             continue;
-
-        f32 alpha = (ac[i]) / (ac[i] - bc[i]);
+        
+        f32 alpha = bc0[i] / (bc0[i] - bc1[i]);
 
         u32 mask = 0x1 << i;
         if (kode0 & mask)
         {
-            //alpha0 = (alpha <= alpha0) ? alpha0 : alpha;
-            alpha0 = max(alpha0, alpha);
+            alpha0 = max(alpha, alpha0);
         }
         else
         {
-            //alpha1 = (alpha <= alpha1) ? alpha : alpha1;
-            alpha1 = min(alpha1, alpha);
+            alpha1 = min(alpha, alpha1);
         }
 
-        if (alpha1 < alpha0)
+        if (alpha1 <= alpha0)
             return false;
-
     }
 
-    //std::cout << "alpha0: " << alpha0 << " alpha1: " << alpha1 << std::endl;
-
-    // Finally, our line is done.
     v4 final_a = point_a;
     v4 final_b = point_b;
     final_a = point_a + (alpha0 * (point_b - point_a));
     final_b = point_a + (alpha1 * (point_b - point_a));
 
-    //std::cout << "during " << final_a << " " << final_b << std::endl;
-
+    for (size_t i = 0; i < 4; ++i)
+    {
+        final_a.elements[i] = point_a.elements[i] +
+            (alpha0 * (point_b.elements[i] - point_a.elements[i]));
+        final_b.elements[i] = point_a.elements[i] +
+            (alpha1 * (point_b.elements[i] - point_a.elements[i]));
+    }
+    
     *a = final_a;
     *b = final_b;
 
     return true;
 
 }
+
+// --- Depth Buffering ---------------------------------------------------------
 
 static f32*     depth_buffer        = NULL;
 static u32      depth_buffer_width  = 0;
@@ -490,6 +484,11 @@ set_depthbuffer(u32 width, u32 height, f32 value)
 
 }
 
+// --- Polygon Clipping --------------------------------------------------------
+//
+// REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+//
+
 #define POLY_CLIP_LEFT      0
 #define POLY_CLIP_RIGHT     1
 #define POLY_CLIP_BOTTOM    2
@@ -515,6 +514,15 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
     clip_list.clear();
     for (size_t idx = 0; idx < 6; ++idx) first_init[idx] = false;
 
+    for (size_t idx = 0; idx < poly_list.size(); ++idx)
+    {
+        poly_list[idx].position.x = poly_list[idx].position.x / poly_list[idx].position.w;
+        poly_list[idx].position.y = poly_list[idx].position.y / poly_list[idx].position.w;
+        poly_list[idx].position.z = poly_list[idx].position.z / poly_list[idx].position.w;
+        poly_list[idx].position.w = poly_list[idx].position.w / poly_list[idx].position.w;
+    }
+
+        
     // We go in deep.
     for (size_t idx = 0; idx < poly_list.size(); ++idx)
         clip_point(poly_list[idx], POLY_CLIP_LEFT);
@@ -525,25 +533,21 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
         if (first_init[idx] && clip_is_crossing(last_seen[idx], first_seen[idx], idx))
         {
             attr_point np = clip_intersect(last_seen[idx], first_seen[idx], idx);
-            clip_point(np, idx+1);
-            //clip_list.push_back(np);
+            if (idx == 5)
+                clip_list.push_back(np);
+            else
+                clip_point(np, idx+1);
         }
     }
 
     out = clip_list;
-
-    for (auto p : out)
-    {
-        std::cout << p.position << std::endl;
-    }
-
     return out.size();
 }
 
 static void
 clip_point(attr_point p, i32 stage)
 {
-
+    
     // Is this the first time we've seen a point?
     if (first_init[stage] == false)
     {
@@ -557,8 +561,10 @@ clip_point(attr_point p, i32 stage)
         if (clip_is_crossing(p, last_seen[stage], stage))
         {
             attr_point np = clip_intersect(p, last_seen[stage], stage);
-            clip_point(np, stage+1);
-            clip_list.push_back(np);
+            if (stage == 5)
+                clip_list.push_back(np);
+            else
+                clip_point(np, stage+1);
         }
     }
 
@@ -567,8 +573,10 @@ clip_point(attr_point p, i32 stage)
     // Check if it is in boundary.
     if (clip_in_boundary(p, stage))
     {
-        clip_point(p, stage+1);
-        //clip_list.push_back(p);
+        if (stage == 5)
+            clip_list.push_back(p);
+        else
+            clip_point(p, stage+1);
     }
 
 }
@@ -578,51 +586,63 @@ clip_intersect(attr_point a, attr_point b, i32 stage)
 {
 
     f32 alpha_value = 0.0f;
-    f32 ac = 0.0f;
-    f32 bc = 0.0f;
-  
+ 
+    v4 point_a = a.position;
+    v4 point_b = b.position;
+
+    f32 ac[6] = {
+        point_a.x, point_a.w - point_a.x,
+        point_a.y, point_a.w - point_a.y,
+        point_a.z, point_a.w - point_a.z,
+    };
+
+    f32 bc[6] = {
+        point_b.x, point_b.w - point_b.x,
+        point_b.y, point_b.w - point_b.y,
+        point_b.z, point_b.w - point_b.z,
+
+    };
+
     switch(stage)
     {
         case POLY_CLIP_LEFT:
         {
             //alpha_value = a.position.x / (a.position.x - b.position.x);
-            ac = a.position.x;
-            bc = b.position.x;
+            alpha_value = ac[0] / (ac[0] - bc[0]);
             break;
         };
         case POLY_CLIP_RIGHT:
         {
-            ac = a.position.w - a.position.x;
-            bc = b.position.w - b.position.x;
+            alpha_value = ac[1] / (ac[1] - bc[1]);
             break;
         };
         case POLY_CLIP_TOP:
         {
-            ac = a.position.y;
-            bc = b.position.y;
+            alpha_value = ac[2] / (ac[2] - bc[2]);
             break;
         };
         case POLY_CLIP_BOTTOM:
         {
-            ac = a.position.w - a.position.y;
-            bc = b.position.w - b.position.y;
-            break;
-        };
-        case POLY_CLIP_FRONT:
-        {
-            ac = a.position.z;
-            bc = b.position.z;
+            alpha_value = ac[3] / (ac[3] - bc[3]);
             break;
         };
         case POLY_CLIP_BACK:
         {
-            ac = a.position.w - a.position.z;
-            bc = b.position.w - b.position.z;
+            alpha_value = ac[4] / (ac[4] - bc[4]);
+            break;
+        };
+        case POLY_CLIP_FRONT:
+        {
+            alpha_value = ac[5] / (ac[5] - bc[5]);
             break;
         };
     };
 
-    alpha_value = ac / (ac - bc);
+    //alpha_value = ac / (ac - bc);
+    //attr_point result = {};
+    //for (size_t i = 0; i < ATTR_SIZE; ++i)
+        //result.coord[i] = a.coord[i] + ( alpha_value * ( b.coord[i] - a.coord[i] ));
+    //return result;
     return interpolate_attributed_point(a, b, alpha_value);
 
 }
@@ -645,13 +665,13 @@ clip_in_boundary(attr_point p, i32 stage)
             else return false;
             break;
         };
-        case POLY_CLIP_BOTTOM:
+        case POLY_CLIP_TOP:
         {
             if (p.position.y >= 0.0f) return true;
             else return false;
             break;
         };
-        case POLY_CLIP_TOP:
+        case POLY_CLIP_BOTTOM:
         {
             if (p.position.y <= 1.0f) return true;
             else return false;
@@ -659,13 +679,13 @@ clip_in_boundary(attr_point p, i32 stage)
         };
         case POLY_CLIP_BACK:
         {
-            if (p.position.z <= 1.0f) return true;
+            if (p.position.z >= 0.0f) return true;
             else return false;
             break;
         };
         case POLY_CLIP_FRONT:
         {
-            if (p.position.z >= 0.0f) return true;
+            if (p.position.z <= 1.0f) return true;
             else return false;
             break;
         };
@@ -682,6 +702,38 @@ clip_is_crossing(attr_point a, attr_point b, i32 stage)
 {
     return (clip_in_boundary(a, stage) != clip_in_boundary(b, stage));
 }
+
+// --- Scan Conversion ---------------------------------------------------------
+
+struct edge
+{
+    int y_last;
+
+    attr_point p;
+    attr_point inc;
+
+    edge *next;
+};
+
+static edge*    edge_table      = NULL;
+static u32      edge_table_size = 0;
+
+void
+create_edgetable(u32 height)
+{
+    if (edge_table != NULL)
+    {
+        free(edge_table);
+    }
+
+    edge_table = (edge*)malloc(sizeof(edge) * height);
+    edge_table_size = height;
+
+    for (size_t i = 0; i < edge_table_size; ++i)
+        edge_table[i].next = NULL;
+
+}
+
 
 void
 scan_convert(std::vector<attr_point>& clip_list)

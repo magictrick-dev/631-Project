@@ -48,6 +48,7 @@ main(int argc, char ** argv)
 
     // Create the depthbuffer using the render description.
     create_depthbuffer(render_description.width, render_description.height);
+    create_edgetable(render_description.height);
 
     if (render_description.device == RDVIEW_DEVICE_WINDOW)
     {
