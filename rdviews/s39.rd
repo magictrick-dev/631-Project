@@ -6,6 +6,7 @@ Display "Solid Clipped Cube"  "Screen" "rgbsingle"
 Format 640 480
 
 CameraEye 0 0 12
+CameraFOV 90
 
 FrameBegin 1
 WorldBegin

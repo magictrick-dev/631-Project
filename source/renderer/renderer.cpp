@@ -514,6 +514,7 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
     clip_list.clear();
     for (size_t idx = 0; idx < 6; ++idx) first_init[idx] = false;
 
+#if 0
     for (size_t idx = 0; idx < poly_list.size(); ++idx)
     {
         poly_list[idx].position.x = poly_list[idx].position.x / poly_list[idx].position.w;
@@ -521,6 +522,7 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
         poly_list[idx].position.z = poly_list[idx].position.z / poly_list[idx].position.w;
         poly_list[idx].position.w = poly_list[idx].position.w / poly_list[idx].position.w;
     }
+#endif
 
         
     // We go in deep.
@@ -639,11 +641,11 @@ clip_intersect(attr_point a, attr_point b, i32 stage)
     };
 
     //alpha_value = ac / (ac - bc);
-    //attr_point result = {};
-    //for (size_t i = 0; i < ATTR_SIZE; ++i)
-        //result.coord[i] = a.coord[i] + ( alpha_value * ( b.coord[i] - a.coord[i] ));
-    //return result;
-    return interpolate_attributed_point(a, b, alpha_value);
+    attr_point result = {};
+    for (size_t i = 0; i < ATTR_SIZE; ++i)
+        result.coord[i] = a.coord[i] + ( alpha_value * ( b.coord[i] - a.coord[i] ));
+    return result;
+    //return interpolate_attributed_point(a, b, alpha_value);
 
 }
 
@@ -651,6 +653,21 @@ static bool
 clip_in_boundary(attr_point p, i32 stage)
 {
 
+    if (stage == POLY_CLIP_LEFT)
+        return (p.position.x >= 0.0f);
+    else if (stage == POLY_CLIP_RIGHT)
+        return ((p.position.w - p.position.x) >= 1.0f);
+    else if (stage == POLY_CLIP_TOP)
+        return ((p.position.y) >= 0.0f);
+    else if (stage == POLY_CLIP_BOTTOM)
+        return ((p.position.w - p.position.y) >= 1.0f);
+    else if (stage == POLY_CLIP_BACK)
+        return ((p.position.z) >= 0.0f);
+    else
+        return ((p.position.w - p.position.z) >= 1.0f);
+
+
+#if 0
     switch(stage)
     {
         case POLY_CLIP_LEFT:
@@ -661,7 +678,7 @@ clip_in_boundary(attr_point p, i32 stage)
         };
         case POLY_CLIP_RIGHT:
         {
-            if (p.position.x <= 1.0f) return true;
+            if ((p.position.w - p.position.x) <= 1.0f) return true;
             else return false;
             break;
         };
@@ -673,19 +690,19 @@ clip_in_boundary(attr_point p, i32 stage)
         };
         case POLY_CLIP_BOTTOM:
         {
-            if (p.position.y <= 1.0f) return true;
-            else return false;
-            break;
-        };
-        case POLY_CLIP_BACK:
-        {
-            if (p.position.z >= 0.0f) return true;
+            if ((p.position.w - p.position.y) <= 1.0f) return true;
             else return false;
             break;
         };
         case POLY_CLIP_FRONT:
         {
-            if (p.position.z <= 1.0f) return true;
+            if (p.position.z >= 0.0f) return true;
+            else return false;
+            break;
+        };
+        case POLY_CLIP_BACK:
+        {
+            if ((p.position.w - p.position.z) <= 1.0f) return true;
             else return false;
             break;
         };
@@ -694,6 +711,7 @@ clip_in_boundary(attr_point p, i32 stage)
             return false;
         };  
     };
+#endif
 
 }
 
