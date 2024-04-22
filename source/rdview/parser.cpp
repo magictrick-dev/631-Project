@@ -136,6 +136,8 @@ rd_poly_pipeline(attr_point p, bool end_flag)
                         clip_list[i].position, this->draw_color);
 #endif
 
+            scan_convert(this->active_device, clip_list);
+
         }
 
         // Empty the vertex list once its rendered.

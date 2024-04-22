@@ -834,6 +834,7 @@ execute()
     rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
 
+#if 1
     rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
@@ -851,6 +852,7 @@ execute()
     rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, true);
+#endif
 
     return;
 

@@ -543,6 +543,19 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
     }
 
     out = clip_list;
+
+#if 1
+    for (auto a : out)
+    {
+        v4 t = a.position;
+        t.x = t.x / t.w;
+        t.y = t.y / t.w;
+        t.z = t.z / t.w;
+        t.w = t.w / t.w;
+        std::cout << t << std::endl;
+    }
+#endif
+
     return out.size();
 }
 
@@ -652,7 +665,6 @@ clip_intersect(attr_point a, attr_point b, i32 stage)
 static bool
 clip_in_boundary(attr_point p, i32 stage)
 {
-
     if (stage == POLY_CLIP_LEFT)
         return (p.position.x >= 0.0f);
     else if (stage == POLY_CLIP_RIGHT)
@@ -752,10 +764,226 @@ create_edgetable(u32 height)
 
 }
 
+void
+insert_edge(edge* active, edge* e)
+{
+    edge *p, *q = active;
+    p = q->next;
+    while (p != NULL && (e->p.position.x > p->p.position.x))
+    {
+        q = p;
+        p = p->next;
+    }
+    e->next = q->next;
+    q->next = e;
+}
 
 void
-scan_convert(std::vector<attr_point>& clip_list)
+make_edge_record(attr_point lower, attr_point upper)
 {
+
+    // Calculates dy.
+    f32 dy = upper.position.y - lower.position.y;
+
+    // Create edge.
+    edge* instance = (edge*)malloc(sizeof(edge));
+    instance->next = NULL;
+    
+    // Store edge increment.
+    attr_point einc;
+    for (size_t i = 0; i < ATTR_SIZE; ++i)
+    {
+        einc.coord[i] = (upper.coord[i] - lower.coord[i]) / dy;
+    }
+
+    instance->inc = einc;
+
+    // Edge start.
+    f32 factor = ceil(lower.position.y) - lower.position.y;
+
+    attr_point p;
+    for (size_t i = 0; i < ATTR_SIZE; ++i)
+    {
+        p.coord[i] = lower.coord[i] + factor * instance->inc.coord[i];
+    }
+    instance->p = p;
+
+    instance->y_last = ceil(upper.position.y) - 1;
+
+    i32 loc = (i32)ceil(lower.position.y);
+    insert_edge(&edge_table[loc], instance);
+
+}
+
+bool
+build_edge_list(std::vector<attr_point>& clip_list)
+{
+    
+    int v1;
+    bool scanline_cross = false;
+
+    v1 = clip_list.size() - 1;
+    for (int v2 = 0; v2 < clip_list.size(); ++v2)
+    {
+        if (clip_list[v1].position.y != clip_list[v2].position.y)
+        {
+            scanline_cross = true;
+            if (clip_list[v1].position.y < clip_list[v2].position.y)
+            {
+                make_edge_record(clip_list[v1], clip_list[v2]);
+            }
+            else
+            {
+                make_edge_record(clip_list[v2], clip_list[v1]);
+            }
+        }
+        
+        v1 = v2;
+
+    }
+
+    return scanline_cross;
+
+}
+
+void
+add_active_list(edge* active, i32 scan_line)
+{
+    edge *p, *q;
+
+    p = edge_table[scan_line].next;
+
+    while (p)
+    {
+        q = p->next;
+        insert_edge(active, p);
+        p = q;
+    }
+
+    edge_table[scan_line].next = NULL;
+
+}
+
+void
+fill_edge_pairs(renderable_device *device, edge* active, i32 scan)
+{
+
+    edge *p1, *p2;
+    p1 = active->next;
+    while (p1)
+    {
+        p2 = p1->next;
+        if (p1->p.position.x != p2->p.position.x)
+        {
+            f32 dx = p2->p.position.x - p1->p.position.x;
+            attr_point inc;
+            for (size_t i = 0; i < ATTR_SIZE; ++i)
+            {
+                inc.coord[i] = (p2->p.coord[i] - p1->p.coord[i]) / dx;
+            }
+            
+            f32 factor = ceil(p1->p.position.x) - p1->p.position.x;
+            
+            attr_point value;
+            for (size_t i = 0; i < ATTR_SIZE; ++i)
+            {
+                value.coord[i] = p1->p.coord[i] + factor * inc.coord[i];
+            }
+
+            f32 endx = ceil(p2->p.position.x);
+
+            while (value.position.x < endx)
+            {
+            
+                device->set_pixel(value.position.x, scan, value.position.y, { 1.0f, 1.0f, 1.0f });
+
+                for (size_t i = 0; i < ATTR_SIZE; ++i)
+                {
+                    value.coord[i] += inc.coord[i];
+                }
+            }
+
+        }
+
+        p1 = p2->next;
+    }
+
+}
+
+void
+delete_after(edge* q)
+{
+
+    edge *p = q->next;
+    q->next = p->next;
+    free(p);
+
+}
+
+void
+update_active(edge* active, i32 scan)
+{
+    edge *q = active, *p = active->next;
+    while (p)
+    {
+        if (scan == p->y_last)
+        {
+            p = p->next;
+            delete_after(q);
+        }
+        else
+        {
+            
+            for (size_t i = 0; i < ATTR_SIZE; ++i)
+            {
+                p->p.coord[i] += p->inc.coord[i];
+            }
+
+            q = p;
+            p = p->next;
+
+        }
+    }
+}
+
+void
+resort_active(edge *active)
+{
+    edge *q, *p = active->next;
+    active->next = NULL;
+    while (p)
+    {
+        q = p->next;
+        insert_edge(active, p);
+        p = q;
+    }
+}
+
+void
+scan_convert(renderable_device *device, std::vector<attr_point>& clip_list)
+{
+
+    assert(edge_table != NULL);
+
+    edge aet_head = {};
+    aet_head.next = NULL;
+
+    if (!build_edge_list(clip_list))
+        return;
+
+    for (int scan = 0; scan < edge_table_size; ++scan)
+    {
+        
+        add_active_list(&aet_head, scan);
+
+        if (aet_head.next != NULL)
+        {
+            fill_edge_pairs(device, &aet_head, scan);
+            update_active(&aet_head, scan);
+            resort_active(&aet_head);
+        }
+
+    }
 
     return;
 }

@@ -12,7 +12,6 @@ FrameBegin 1
 WorldBegin
 
 Translate 10 0 0
-
 Scale 5 5 5
 
 Cube
