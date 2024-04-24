@@ -74,6 +74,6 @@ void    set_line_dda(renderable_device *device, v4 a, v4 b, v3 color);
 
 i32     poly_clip(std::vector<attr_point>& vertex_list, std::vector<attr_point>& clipped_list);
 void    create_edgetable(u32 height);
-void    scan_convert(renderable_device* device, std::vector<attr_point>& clip_list);
+void    scan_convert(renderable_device* device, std::vector<attr_point>& clip_list, v3 color);
 
 #endif

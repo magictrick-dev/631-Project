@@ -545,6 +545,7 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
     out = clip_list;
 
 #if 1
+    std::cout << "\nClip output:" << std::endl;
     for (auto a : out)
     {
         v4 t = a.position;
@@ -600,21 +601,27 @@ static attr_point
 clip_intersect(attr_point a, attr_point b, i32 stage)
 {
 
-    f32 alpha_value = 0.0f;
+    double alpha_value = 0.0f;
  
     v4 point_a = a.position;
     v4 point_b = b.position;
 
-    f32 ac[6] = {
-        point_a.x, point_a.w - point_a.x,
-        point_a.y, point_a.w - point_a.y,
-        point_a.z, point_a.w - point_a.z,
+    double ac[6] = {
+        point_a.x,
+        point_a.w - point_a.x,
+        point_a.y,
+        point_a.w - point_a.y,
+        point_a.z,
+        point_a.w - point_a.z,
     };
 
-    f32 bc[6] = {
-        point_b.x, point_b.w - point_b.x,
-        point_b.y, point_b.w - point_b.y,
-        point_b.z, point_b.w - point_b.z,
+    double bc[6] = {
+        point_b.x,
+        point_b.w - point_b.x,
+        point_b.y,
+        point_b.w - point_b.y,
+        point_b.z,
+        point_b.w - point_b.z,
 
     };
 
@@ -656,7 +663,9 @@ clip_intersect(attr_point a, attr_point b, i32 stage)
     //alpha_value = ac / (ac - bc);
     attr_point result = {};
     for (size_t i = 0; i < ATTR_SIZE; ++i)
+    {
         result.coord[i] = a.coord[i] + ( alpha_value * ( b.coord[i] - a.coord[i] ));
+    }
     return result;
     //return interpolate_attributed_point(a, b, alpha_value);
 
@@ -666,17 +675,17 @@ static bool
 clip_in_boundary(attr_point p, i32 stage)
 {
     if (stage == POLY_CLIP_LEFT)
-        return (p.position.x >= 0.0f);
+        return !(p.position.x < 0.0f);
     else if (stage == POLY_CLIP_RIGHT)
-        return ((p.position.w - p.position.x) >= 1.0f);
+        return !((p.position.w - p.position.x) < 0.0f);
     else if (stage == POLY_CLIP_TOP)
-        return ((p.position.y) >= 0.0f);
+        return !((p.position.y) < 0.0f);
     else if (stage == POLY_CLIP_BOTTOM)
-        return ((p.position.w - p.position.y) >= 1.0f);
+        return !((p.position.w - p.position.y) < 0.0f);
     else if (stage == POLY_CLIP_BACK)
-        return ((p.position.z) >= 0.0f);
+        return !((p.position.z) < 0.0f);
     else
-        return ((p.position.w - p.position.z) >= 1.0f);
+        return !((p.position.w - p.position.z) < 0.0f);
 
 
 #if 0
@@ -787,6 +796,7 @@ make_edge_record(attr_point lower, attr_point upper)
 
     // Create edge.
     edge* instance = (edge*)malloc(sizeof(edge));
+    *instance = {};
     instance->next = NULL;
     
     // Store edge increment.
@@ -810,8 +820,8 @@ make_edge_record(attr_point lower, attr_point upper)
 
     instance->y_last = ceil(upper.position.y) - 1;
 
-    i32 loc = (i32)ceil(lower.position.y);
-    insert_edge(&edge_table[loc], instance);
+    f32 loc = ceil(lower.position.y);
+    insert_edge(&edge_table[(i32)loc], instance);
 
 }
 
@@ -819,16 +829,16 @@ bool
 build_edge_list(std::vector<attr_point>& clip_list)
 {
     
-    int v1;
+    int v1, v2;
     bool scanline_cross = false;
 
     v1 = clip_list.size() - 1;
-    for (int v2 = 0; v2 < clip_list.size(); ++v2)
+    for (v2 = 0; v2 < clip_list.size(); ++v2)
     {
-        if (clip_list[v1].position.y != clip_list[v2].position.y)
+        if ((i32)clip_list[v1].position.y != (i32)clip_list[v2].position.y)
         {
             scanline_cross = true;
-            if (clip_list[v1].position.y < clip_list[v2].position.y)
+            if ((i32)clip_list[v1].position.y < (i32)clip_list[v2].position.y)
             {
                 make_edge_record(clip_list[v1], clip_list[v2]);
             }
@@ -865,7 +875,7 @@ add_active_list(edge* active, i32 scan_line)
 }
 
 void
-fill_edge_pairs(renderable_device *device, edge* active, i32 scan)
+fill_edge_pairs(renderable_device *device, edge* active, i32 scan, v3 color)
 {
 
     edge *p1, *p2;
@@ -895,7 +905,12 @@ fill_edge_pairs(renderable_device *device, edge* active, i32 scan)
             while (value.position.x < endx)
             {
             
-                device->set_pixel(value.position.x, scan, value.position.y, { 1.0f, 1.0f, 1.0f });
+                v4 res = value.position;
+                res.y = scan;
+
+                if (set_depthbuffer(res.x, scan, res.z))
+                    device->set_pixel(res.x, scan, res.z, color);
+                    //device->set_pixel(p.x, p.y, p.z, draw_color);       
 
                 for (size_t i = 0; i < ATTR_SIZE; ++i)
                 {
@@ -960,7 +975,7 @@ resort_active(edge *active)
 }
 
 void
-scan_convert(renderable_device *device, std::vector<attr_point>& clip_list)
+scan_convert(renderable_device *device, std::vector<attr_point>& clip_list, v3 color)
 {
 
     assert(edge_table != NULL);
@@ -971,6 +986,8 @@ scan_convert(renderable_device *device, std::vector<attr_point>& clip_list)
     if (!build_edge_list(clip_list))
         return;
 
+
+
     for (int scan = 0; scan < edge_table_size; ++scan)
     {
         
@@ -978,7 +995,7 @@ scan_convert(renderable_device *device, std::vector<attr_point>& clip_list)
 
         if (aet_head.next != NULL)
         {
-            fill_edge_pairs(device, &aet_head, scan);
+            fill_edge_pairs(device, &aet_head, scan, color);
             update_active(&aet_head, scan);
             resort_active(&aet_head);
         }

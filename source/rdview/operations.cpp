@@ -834,25 +834,36 @@ execute()
     rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
 
-#if 1
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
+    
+    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, true);
+
+    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, true);
+
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
+    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
+
+
     rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, true);
-
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, true);
-
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, true);
-#endif
 
     return;
 
@@ -1086,11 +1097,11 @@ execute()
                 1.0f
             };
 
-            rdv->rd_line_pipeline(p1.xyz, true);
-            rdv->rd_line_pipeline(p2.xyz, false);
-            rdv->rd_line_pipeline(p3.xyz, false);
-            rdv->rd_line_pipeline(p4.xyz, false);
-            rdv->rd_line_pipeline(p1.xyz, false);
+            rdv->rd_poly_pipeline({p1.x, p1.y, p1.z, p1.w}, false);
+            rdv->rd_poly_pipeline({p2.x, p2.y, p2.z, p2.w}, false);
+            rdv->rd_poly_pipeline({p3.x, p3.y, p3.z, p3.w}, false);
+            rdv->rd_poly_pipeline({p4.x, p4.y, p4.z, p4.w}, false);
+            rdv->rd_poly_pipeline({p1.x, p1.y, p1.z, p1.w}, true);
 
         }
 
@@ -1444,7 +1455,7 @@ parse(void *statement)
             x = std::stof(current_statement[0]);
             y = std::stof(current_statement[1]);
             z = std::stof(current_statement[2]);
-            this->points.push_back({x, y, z});
+            this->points.push_back({x, y, z, 1.0f});
         }
         else
         {
@@ -1495,13 +1506,20 @@ execute()
     for (auto& current_face : this->faces)
     {
 
+#if 0
         rdv->rd_line_pipeline(this->points[current_face[0]], true);
         for (size_t i = 1; i < current_face.size(); ++i)
         {
             rdv->rd_line_pipeline(this->points[current_face[i]], false);
         }
         rdv->rd_line_pipeline(this->points[current_face[0]], false);
-
+#endif
+        rdv->rd_poly_pipeline(this->points[current_face[0]], false);
+        for (size_t i = 1; i < current_face.size(); ++i)
+        {
+            rdv->rd_poly_pipeline(this->points[current_face[i]], false);
+        }
+        rdv->rd_poly_pipeline(this->points[current_face[0]], true);
 
     }
 
@@ -1559,10 +1577,10 @@ execute()
         f32 nx = cosf(DEGREES_TO_RADIANS(ntheta)) * this->r;
         f32 ny = sinf(DEGREES_TO_RADIANS(ntheta)) * this->r;
 
-        rdv->rd_line_pipeline({cx, cy, 0.0f}, true);
-        rdv->rd_line_pipeline({0.0f, 0.0f, this->h}, false);
-        rdv->rd_line_pipeline({nx, ny, 0.0f}, false);
-        rdv->rd_line_pipeline({cx, cy, 0.0f}, false);
+        rdv->rd_poly_pipeline({cx, cy, 0.0f, 1.0f}, false);
+        rdv->rd_poly_pipeline({0.0f, 0.0f, this->h, 1.0f}, false);
+        rdv->rd_poly_pipeline({nx, ny, 0.0f, 1.0f}, false);
+        rdv->rd_poly_pipeline({cx, cy, 0.0f,1.0f}, true);
 
     }
 
@@ -1656,11 +1674,11 @@ execute()
         f32 nx = this->r * cosf(DEGREES_TO_RADIANS(ntheta));
         f32 ny = this->r * sinf(DEGREES_TO_RADIANS(ntheta));
 
-        rdv->rd_line_pipeline({cx, cy, this->zmin}, true); 
-        rdv->rd_line_pipeline({nx, ny, this->zmin}, false); 
-        rdv->rd_line_pipeline({nx, ny, this->zmax}, false); 
-        rdv->rd_line_pipeline({cx, cy, this->zmax}, false); 
-        rdv->rd_line_pipeline({cx, cy, this->zmin}, false); 
+        rdv->rd_poly_pipeline({cx, cy, this->zmin, 1.0f}, false); 
+        rdv->rd_poly_pipeline({nx, ny, this->zmin, 1.0f}, false); 
+        rdv->rd_poly_pipeline({nx, ny, this->zmax, 1.0f}, false); 
+        rdv->rd_poly_pipeline({cx, cy, this->zmax, 1.0f}, false); 
+        rdv->rd_poly_pipeline({cx, cy, this->zmin, 1.0f}, true); 
 
     }
 

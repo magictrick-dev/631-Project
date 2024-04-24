@@ -114,7 +114,8 @@ rd_poly_pipeline(attr_point p, bool end_flag)
         std::vector<attr_point> clip_list;
         if (poly_clip(vertex_list, clip_list))
         {
-            
+ 
+            std::cout << "\nPolygon List Normalize:" << std::endl;
             // Convert to device coordinates and homogenize.
             for (size_t i = 0; i < clip_list.size(); ++i)
             {
@@ -124,9 +125,9 @@ rd_poly_pipeline(attr_point p, bool end_flag)
                 clip_list[i].position.y /= clip_list[i].position.w;
                 clip_list[i].position.z /= clip_list[i].position.w;
                 clip_list[i].position.w /= clip_list[i].position.w;
+                std::cout << clip_list[i].position << std::endl;
             }
-
-#if 1
+#if 0
             // Draw the first line.
             set_line_dda(this->active_device, clip_list[clip_list.size()-1].position,
                     clip_list[0].position, this->draw_color);
@@ -134,9 +135,9 @@ rd_poly_pipeline(attr_point p, bool end_flag)
             for (size_t i = 1; i < clip_list.size(); ++i)
                 set_line_dda(this->active_device, clip_list[i-1].position,
                         clip_list[i].position, this->draw_color);
+#else
+            scan_convert(this->active_device, clip_list, this->draw_color);
 #endif
-
-            scan_convert(this->active_device, clip_list);
 
         }
 

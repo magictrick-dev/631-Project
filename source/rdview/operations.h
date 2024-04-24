@@ -3,6 +3,7 @@
 #include <core.h>
 #include <string>
 #include <vector>
+#include <renderer/renderer.h>
 
 // --- Base Operation Class ----------------------------------------------------
 //
@@ -308,7 +309,7 @@ class rdpolyset : public rdoperation
         std::string type;
         i32 verts;
         i32 fc;
-        std::vector<v3> points;
+        std::vector<attr_point> points;
         std::vector<std::vector<i32>> faces;
 };
 
