@@ -59,6 +59,48 @@ std::string rdview_parser_keyword_dequote(std::string keyword);
 
 // --- RDView Parser & Configuration -------------------------------------------
 
+typedef void (*surface_shader_fptr)(v3& color);
+
+inline void
+matte_shader(v3& color)
+{
+
+}
+
+inline void
+metal_shader(v3& color)
+{
+
+}
+
+inline void
+plastic_shader(v3& color)
+{
+    
+}
+
+struct light_model
+{
+    f32 diffuse_coefficient     = 1.0f;
+    f32 ambient_coefficient     = 0.0f;
+    f32 specular_coefficient    = 0.0f;
+    v3  surface_color           = { 1.0f, 1.0f, 1.0f };
+    v3  specular_color          = { 1.0f, 1.0f, 1.0f };
+    f32 specular_exponent       = 10.0f;
+
+    bool vertex_color_flag          = false;
+    bool vertex_normal_flag         = false;
+    bool vertex_texture_flag        = false;
+    bool vertex_interpolate_flag    = true;
+
+    v4  view_vector;
+    v4  poly_normal;
+    attr_point surface_point_values;
+
+    surface_shader_fptr shader_function = matte_shader;
+
+};
+
 class rdview
 {
     public:
@@ -91,6 +133,8 @@ class rdview
         v3  camera_at   = { 0, 0, -1 };
         v3  camera_up   = { 0, 1, 0 };
 
+        light_model lighting;
+
         f32 fov = 90.0f;
         f32 nearp = 1.0f;
         f32 farp = 100000000.0f;
@@ -103,6 +147,7 @@ class rdview
 
         m4 current_transform;
         std::vector<m4> transform_stack;
+        std::vector<m4> light_transform_stack;
 
         std::string title;
         u32         device;
