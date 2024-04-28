@@ -714,8 +714,11 @@ execute()
     rdview *rdv = (rdview*)this->rdview_parent;
     m4 scale = m4::create_scale({this->x, this->y, this->z});
     //rdv->transform_stack.push_back(scale);
+    m4 sci = m4::create_scalei({this->x, this->y, this->z});
 
     rdv->current_transform = rdv->current_transform * scale;
+    rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack
+        * sci;
 
     return;
 
@@ -1164,18 +1167,27 @@ execute()
     {
         m4 rx = m4::create_rotation_x(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
+        m4 rix = m4::create_rotation_xi(this->theta);
+        rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack 
+            * rix;
     }
 
     else if (this->axis == 1)
     {
         m4 rx = m4::create_rotation_y(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
+        m4 rix = m4::create_rotation_yi(this->theta);
+        rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack 
+            * rix;
     }
 
     else if (this->axis == 2)
     {
         m4 rx = m4::create_rotation_z(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
+        m4 rix = m4::create_rotation_zi(this->theta);
+        rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack 
+            * rix;
     }
 
     else

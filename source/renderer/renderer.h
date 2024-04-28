@@ -100,6 +100,8 @@ struct light_model
     std::vector<farlight>   farlights;
     std::vector<pointlight> pointlights;
 
+    m4 light_transform_stack = m4::create_identity();
+
     v4  view_vector;
     v4  poly_normal;
     attr_point surface_point_values;

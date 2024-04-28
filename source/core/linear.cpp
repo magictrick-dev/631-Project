@@ -347,6 +347,44 @@ create_rotation_x(f32 degrees)
 
 }
 
+m4 m4::
+create_rotation_zi(f32 degrees)
+{
+
+    m4 result = m4::create_identity();
+    result.rows[0][0] =  cosf(DEGREES_TO_RADIANS(degrees));
+    result.rows[0][1] =  sinf(DEGREES_TO_RADIANS(degrees));
+    result.rows[1][0] = -sinf(DEGREES_TO_RADIANS(degrees));
+    result.rows[1][1] =  cosf(DEGREES_TO_RADIANS(degrees));
+    return result;
+
+}
+
+m4 m4::
+create_rotation_yi(f32 degrees)
+{
+
+    m4 result = m4::create_identity();
+    result.rows[0][0] =  cosf(DEGREES_TO_RADIANS(degrees));
+    result.rows[0][2] = -sinf(DEGREES_TO_RADIANS(degrees));
+    result.rows[2][0] =  sinf(DEGREES_TO_RADIANS(degrees));
+    result.rows[2][2] =  cosf(DEGREES_TO_RADIANS(degrees));
+    return result;
+
+}
+
+m4 m4::
+create_rotation_xi(f32 degrees)
+{
+
+    m4 result = m4::create_identity();
+    result.rows[1][1] =  cosf(DEGREES_TO_RADIANS(degrees));
+    result.rows[1][2] =  sinf(DEGREES_TO_RADIANS(degrees));
+    result.rows[2][1] = -sinf(DEGREES_TO_RADIANS(degrees));
+    result.rows[2][2] =  cosf(DEGREES_TO_RADIANS(degrees));
+    return result;
+
+}
 
 m4 m4::
 create_rotation(v3 r)
@@ -368,6 +406,16 @@ create_scale(v3 s)
     scale.rows[0][0] = s[0];
     scale.rows[1][1] = s[1];
     scale.rows[2][2] = s[2];
+    return scale;
+}
+
+m4 m4::
+create_scalei(v3 s)
+{
+    m4 scale = m4::create_identity();
+    scale.rows[0][0] = 1.0f/s[0];
+    scale.rows[1][1] = 1.0f/s[1];
+    scale.rows[2][2] = 1.0f/s[2];
     return scale;
 }
 

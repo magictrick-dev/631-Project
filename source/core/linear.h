@@ -10,6 +10,16 @@ struct m4;
 v4 parameterize(v4 a, v4 b, f32 t);
 v4 homogenize(v4 h);
 
+inline f32 clamp(f32 a, f32 c, f32 b)
+{
+    if (c < a)
+        return a;
+    else if (c > b)
+        return b;
+    else
+        return c;
+}
+
 // --- Vector 3D ---------------------------------------------------------------
 
 struct v3
@@ -136,10 +146,14 @@ struct m4
     static m4 create_identity();
     static m4 create_transform(v3 t);
     static m4 create_scale(v3 s);
+    static m4 create_scalei(v3 s);
     static m4 create_rotation(v3 r);
     static m4 create_rotation_z(f32 degrees);
     static m4 create_rotation_y(f32 degrees);
     static m4 create_rotation_x(f32 degrees);
+    static m4 create_rotation_zi(f32 degrees);
+    static m4 create_rotation_yi(f32 degrees);
+    static m4 create_rotation_xi(f32 degrees);
     static m4 create_world_to_camera(v4 eye, v4 at, v4 up);
     static m4 create_camera_to_clip(f32 fov, f32 near, f32 far, f32 aspect_ratio);
     static m4 create_clip_to_device(int width, int height);

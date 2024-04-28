@@ -111,7 +111,6 @@ class rdview
 
         m4 current_transform;
         std::vector<m4> transform_stack;
-        std::vector<m4> light_transform_stack;
 
         std::string title;
         u32         device;
