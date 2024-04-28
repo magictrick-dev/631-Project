@@ -544,7 +544,7 @@ poly_clip(std::vector<attr_point>& poly_list, std::vector<attr_point>& out)
 
     out = clip_list;
 
-#if 1
+#if 0
     std::cout << "\nClip output:" << std::endl;
     for (auto a : out)
     {
@@ -835,10 +835,10 @@ build_edge_list(std::vector<attr_point>& clip_list)
     v1 = clip_list.size() - 1;
     for (v2 = 0; v2 < clip_list.size(); ++v2)
     {
-        if ((i32)clip_list[v1].position.y != (i32)clip_list[v2].position.y)
+        if (ceil(clip_list[v1].position.y) != ceil(clip_list[v2].position.y))
         {
             scanline_cross = true;
-            if ((i32)clip_list[v1].position.y < (i32)clip_list[v2].position.y)
+            if (clip_list[v1].position.y < clip_list[v2].position.y)
             {
                 make_edge_record(clip_list[v1], clip_list[v2]);
             }
@@ -1003,4 +1003,24 @@ scan_convert(renderable_device *device, std::vector<attr_point>& clip_list, v3 c
     }
 
     return;
+}
+
+// --- Lighting ----------------------------------------------------------------
+
+void
+matte_shader(v3& color, light_model& model)
+{
+
+}
+
+void
+metal_shader(v3& color, light_model& model)
+{
+
+}
+
+void
+plastic_shader(v3& color, light_model& model)
+{
+    
 }

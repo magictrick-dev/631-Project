@@ -380,4 +380,64 @@ class rdclipping : public rdoperation
         f32 farp;
 };
 
+class rdfarlight : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdfarlight(void *parent);
+
+        farlight        light;
+};
+
+class rdambientlight : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdambientlight(void *parent);
+
+        ambientlight    light;
+};
+
+class rdpointlight : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdpointlight(void *parent);
+
+        pointlight      light;
+};
+
+class rdka : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdka(void *parent);
+
+        f32 Ka;
+};
+
+class rdkd : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdkd(void *parent);
+
+        f32 Kd;
+};
+
+class rdks : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdks(void *parent);
+
+        f32 Ks;
+};
+
 #endif

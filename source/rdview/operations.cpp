@@ -1826,8 +1826,12 @@ void rdframebegin::
 execute()
 {
     rdview *rdv = (rdview*)this->rdview_parent;
+
+    // Clear the depth buffer and wipe the canvas.
     clear_depthbuffer();
     set_fill(rdv->active_device, rdv->canvas_color);
+
+    rdv->lighting = {}; // Reset the lighting model.
     this->operations.run();
 }
 
@@ -1990,6 +1994,302 @@ execute()
     rdview *rdv = (rdview*)this->rdview_parent;
     rdv->nearp  = this->nearp;
     rdv->farp   = this->farp;
+
+    return;
+
+}
+
+// --- Farlight ----------------------------------------------------------------
+//
+//
+//
+
+rdfarlight::
+rdfarlight(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdfarlight::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 8)
+    {
+        stm.print_error("The number of arguments for Farlight is incorrect.");
+        return false;
+    }
+ 
+    f32 x = std::stof(stm[1]);
+    f32 y = std::stof(stm[2]);
+    f32 z = std::stof(stm[3]);
+    f32 r = std::stof(stm[4]);
+    f32 g = std::stof(stm[5]);
+    f32 b = std::stof(stm[6]);
+    f32 i = std::stof(stm[7]);
+
+    this->light.I = { x, y, z };
+    this->light.C = { r*i, g*i, b*i };
+    this->light.intensity = i;
+
+    return true;
+
+}
+
+void rdfarlight::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.farlights.push_back(this->light);
+
+    return;
+
+}
+
+// --- Ambientlight ------------------------------------------------------------
+//
+//
+//
+
+rdambientlight::
+rdambientlight(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdambientlight::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 5)
+    {
+        stm.print_error("The number of arguments for ambient light is incorrect.");
+        return false;
+    }
+ 
+    f32 r = std::stof(stm[1]);
+    f32 g = std::stof(stm[2]);
+    f32 b = std::stof(stm[3]);
+    f32 i = std::stof(stm[4]);
+
+    this->light.C = { r*i, g*i, b*i };
+    this->light.intensity = i;
+
+    return true;
+
+}
+
+void rdambientlight::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.ambient = this->light;
+
+    return;
+
+}
+
+// --- Pointlight --------------------------------------------------------------
+//
+//
+//
+
+rdpointlight::
+rdpointlight(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdpointlight::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 8)
+    {
+        stm.print_error("The number of arguments for Pointlight is incorrect.");
+        return false;
+    }
+ 
+    f32 x = std::stof(stm[1]);
+    f32 y = std::stof(stm[2]);
+    f32 z = std::stof(stm[3]);
+    f32 r = std::stof(stm[4]);
+    f32 g = std::stof(stm[5]);
+    f32 b = std::stof(stm[6]);
+    f32 i = std::stof(stm[7]);
+
+    this->light.P = { x, y, z };
+    this->light.C = { r*i, g*i, b*i };
+    this->light.intensity = i;
+
+    return true;
+
+}
+
+void rdpointlight::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.pointlights.push_back(this->light);
+
+    return;
+
+}
+
+// --- Ka ----------------------------------------------------------------------
+//
+//
+//
+
+rdka::
+rdka(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdka::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 2)
+    {
+        stm.print_error("The number of arguments for Ka is incorrect.");
+        return false;
+    }
+ 
+    f32 ka = std::stof(stm[1]);
+
+    this->Ka = ka;
+
+    return true;
+
+}
+
+void rdka::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.ambient_coefficient = this->Ka;
+
+    return;
+
+}
+
+// --- Ks ----------------------------------------------------------------------
+//
+//
+//
+
+rdks::
+rdks(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdks::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 2)
+    {
+        stm.print_error("The number of arguments for Ks is incorrect.");
+        return false;
+    }
+ 
+    f32 ks = std::stof(stm[1]);
+
+    this->Ks = ks;
+
+    return true;
+
+}
+
+void rdks::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.specular_coefficient = this->Ks;
+
+    return;
+
+}
+
+// --- Kd ----------------------------------------------------------------------
+//
+//
+//
+
+rdkd::
+rdkd(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdkd::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 2)
+    {
+        stm.print_error("The number of arguments for Kd is incorrect.");
+        return false;
+    }
+ 
+    f32 kd = std::stof(stm[1]);
+
+    this->Kd = kd;
+
+    return true;
+
+}
+
+void rdkd::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.diffuse_coefficient = this->Kd;
 
     return;
 

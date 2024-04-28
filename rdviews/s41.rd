@@ -7,6 +7,7 @@ Format 640 480
 CameraFOV 5
 CameraEye 0 0 50
 
+FrameBegin 1
 WorldBegin
 
 FarLight 0 0 -1  1.0  1.0  1.0  1.0
@@ -23,3 +24,4 @@ Translate -2.5 0 0
 Sphere 1.0 -1.0 1.0 360.0
 
 WorldEnd
+FrameEnd

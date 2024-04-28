@@ -47,6 +47,12 @@
 #define RDVIEW_OPTYPE_FRAMEEND      29
 #define RDVIEW_OPTYPE_POINTSET      30
 #define RDVIEW_OPTYPE_CLIPPING      31
+#define RDVIEW_OPTYPE_FARLIGHT      32
+#define RDVIEW_OPTYPE_AMBIENTLIGHT  33
+#define RDVIEW_OPTYPE_POINTLIGHT    34
+#define RDVIEW_OPTYPE_KA            35
+#define RDVIEW_OPTYPE_KS            36
+#define RDVIEW_OPTYPE_KD            37
 
 #include <rdview/operations.h>
 #include <rdview/statement.h>
@@ -58,48 +64,6 @@ void        rdview_parser_rejoin_strings(std::vector<std::string>& lk_line);
 std::string rdview_parser_keyword_dequote(std::string keyword);
 
 // --- RDView Parser & Configuration -------------------------------------------
-
-typedef void (*surface_shader_fptr)(v3& color);
-
-inline void
-matte_shader(v3& color)
-{
-
-}
-
-inline void
-metal_shader(v3& color)
-{
-
-}
-
-inline void
-plastic_shader(v3& color)
-{
-    
-}
-
-struct light_model
-{
-    f32 diffuse_coefficient     = 1.0f;
-    f32 ambient_coefficient     = 0.0f;
-    f32 specular_coefficient    = 0.0f;
-    v3  surface_color           = { 1.0f, 1.0f, 1.0f };
-    v3  specular_color          = { 1.0f, 1.0f, 1.0f };
-    f32 specular_exponent       = 10.0f;
-
-    bool vertex_color_flag          = false;
-    bool vertex_normal_flag         = false;
-    bool vertex_texture_flag        = false;
-    bool vertex_interpolate_flag    = true;
-
-    v4  view_vector;
-    v4  poly_normal;
-    attr_point surface_point_values;
-
-    surface_shader_fptr shader_function = matte_shader;
-
-};
 
 class rdview
 {

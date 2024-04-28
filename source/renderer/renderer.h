@@ -53,6 +53,61 @@ interpolate_attributed_point(attr_point a, attr_point b, f32 t)
 
 }
 
+// --- Light Modeling ----------------------------------------------------------
+
+struct farlight
+{
+    v3 I;
+    v3 C;
+    f32 intensity;
+};
+
+struct ambientlight
+{
+    v3 C;
+    f32 intensity;
+};
+
+struct pointlight
+{
+    v3 P;
+    v3 C;
+    f32 intensity;
+};
+
+struct light_model;
+typedef void (*surface_shader_fptr)(v3& color, light_model& model);
+void matte_shader(v3& color, light_model& model);
+void metal_shader(v3& color, light_model& model);
+void plastic_shader(v3& color, light_model& model);
+
+struct light_model
+{
+    f32 diffuse_coefficient     = 1.0f;
+    f32 ambient_coefficient     = 0.0f;
+    f32 specular_coefficient    = 0.0f;
+    v3  surface_color           = { 1.0f, 1.0f, 1.0f };
+    v3  specular_color          = { 1.0f, 1.0f, 1.0f };
+    f32 specular_exponent       = 10.0f;
+
+    bool vertex_color_flag          = false;
+    bool vertex_normal_flag         = false;
+    bool vertex_texture_flag        = false;
+    bool vertex_interpolate_flag    = true;
+
+    // Only one ambient light, many far and point lights.
+    ambientlight ambient            = { 1.0f, 1.0f, 1.0f, 1.0f };
+    std::vector<farlight>   farlights;
+    std::vector<pointlight> pointlights;
+
+    v4  view_vector;
+    v4  poly_normal;
+    attr_point surface_point_values;
+
+    surface_shader_fptr shader_function = matte_shader;
+
+};
+
 // --- Renderer Functions ------------------------------------------------------
 //
 // Color values are normalized 0.0-1.0f.

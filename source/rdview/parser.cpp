@@ -115,7 +115,6 @@ rd_poly_pipeline(attr_point p, bool end_flag)
         if (poly_clip(vertex_list, clip_list))
         {
  
-            std::cout << "\nPolygon List Normalize:" << std::endl;
             // Convert to device coordinates and homogenize.
             for (size_t i = 0; i < clip_list.size(); ++i)
             {
@@ -125,7 +124,9 @@ rd_poly_pipeline(attr_point p, bool end_flag)
                 clip_list[i].position.y /= clip_list[i].position.w;
                 clip_list[i].position.z /= clip_list[i].position.w;
                 clip_list[i].position.w /= clip_list[i].position.w;
+#if 0
                 std::cout << clip_list[i].position << std::endl;
+#endif
             }
 #if 0
             // Draw the first line.
@@ -610,6 +611,70 @@ create_operation(rdstatement *current_statement)
         return clip;
 
     }
+
+
+    else if (identifier == "AmbientLight")
+    {
+        rdambientlight *clip = new rdambientlight(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_AMBIENTLIGHT;
+        return clip;
+
+    }
+
+    else if (identifier == "FarLight")
+    {
+        rdfarlight *clip = new rdfarlight(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_FARLIGHT;
+        return clip;
+
+    }
+
+    else if (identifier == "PointLight")
+    {
+        rdpointlight *clip = new rdpointlight(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_POINTLIGHT;
+        return clip;
+
+    }
+
+    else if (identifier == "Ka")
+    {
+        rdka *clip = new rdka(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_KA;
+        return clip;
+
+    }
+
+    else if (identifier == "Ks")
+    {
+        rdks *clip = new rdks(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_KS;
+        return clip;
+
+    }
+
+
+    else if (identifier == "Kd")
+    {
+        rdkd *clip = new rdkd(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_KD;
+        return clip;
+
+    }
+
+
 
     else
     {
