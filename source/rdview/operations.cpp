@@ -667,8 +667,10 @@ execute()
     rdview *rdv = (rdview*)this->rdview_parent;
     m4 translation = m4::create_transform({this->x, this->y, this->z});
     //rdv->transform_stack.push_back(translation);
+    m4 ti = m4::create_transformi({this->x, this->y, this->z});
 
     rdv->current_transform = rdv->current_transform * translation;
+    rdv->lighting.light_transform = rdv->lighting.light_transform * ti;
 
     return;
 
@@ -717,7 +719,7 @@ execute()
     m4 sci = m4::create_scalei({this->x, this->y, this->z});
 
     rdv->current_transform = rdv->current_transform * scale;
-    rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack
+    rdv->lighting.light_transform = rdv->lighting.light_transform
         * sci;
 
     return;
@@ -907,6 +909,7 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
     rdv->transform_stack.push_back(rdv->current_transform);
+    rdv->lighting.transform_stack.push_back(rdv->lighting.light_transform);
 
     return;
 
@@ -952,6 +955,9 @@ execute()
     m4 last_transform = rdv->transform_stack.back();
     rdv->current_transform = last_transform;
     rdv->transform_stack.pop_back();
+
+    rdv->lighting.light_transform = rdv->lighting.transform_stack.back();
+    rdv->lighting.transform_stack.pop_back();
 
     return;
 
@@ -1100,11 +1106,31 @@ execute()
                 1.0f
             };
 
-            rdv->rd_poly_pipeline({p1.x, p1.y, p1.z, p1.w}, false);
-            rdv->rd_poly_pipeline({p2.x, p2.y, p2.z, p2.w}, false);
-            rdv->rd_poly_pipeline({p3.x, p3.y, p3.z, p3.w}, false);
-            rdv->rd_poly_pipeline({p4.x, p4.y, p4.z, p4.w}, false);
-            rdv->rd_poly_pipeline({p1.x, p1.y, p1.z, p1.w}, true);
+            rdv->lighting.vertex_color_flag = false;
+            rdv->lighting.vertex_texture_flag = false;
+            rdv->lighting.vertex_normal_flag = true;
+
+            attr_point ap1;
+            ap1.position = p1;
+            ap1.normals = p1.xyz;
+            rdv->rd_poly_pipeline(ap1, false);
+
+            attr_point ap2;
+            ap2.position = p2;
+            ap2.normals = p2.xyz;
+            rdv->rd_poly_pipeline(ap2, false);
+
+            attr_point ap3;
+            ap3.position = p3;
+            ap3.normals = p3.xyz;
+            rdv->rd_poly_pipeline(ap3, false);
+
+            attr_point ap4;
+            ap4.position = p4;
+            ap4.normals = p4.xyz;
+            rdv->rd_poly_pipeline(ap4, false);
+
+            rdv->rd_poly_pipeline(ap1, true);
 
         }
 
@@ -1168,7 +1194,7 @@ execute()
         m4 rx = m4::create_rotation_x(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
         m4 rix = m4::create_rotation_xi(this->theta);
-        rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack 
+        rdv->lighting.light_transform = rdv->lighting.light_transform
             * rix;
     }
 
@@ -1177,7 +1203,7 @@ execute()
         m4 rx = m4::create_rotation_y(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
         m4 rix = m4::create_rotation_yi(this->theta);
-        rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack 
+        rdv->lighting.light_transform = rdv->lighting.light_transform
             * rix;
     }
 
@@ -1186,7 +1212,7 @@ execute()
         m4 rx = m4::create_rotation_z(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
         m4 rix = m4::create_rotation_zi(this->theta);
-        rdv->lighting.light_transform_stack = rdv->lighting.light_transform_stack 
+        rdv->lighting.light_transform = rdv->lighting.light_transform
             * rix;
     }
 
@@ -1518,14 +1544,23 @@ execute()
     for (auto& current_face : this->faces)
     {
 
-#if 0
-        rdv->rd_line_pipeline(this->points[current_face[0]], true);
-        for (size_t i = 1; i < current_face.size(); ++i)
-        {
-            rdv->rd_line_pipeline(this->points[current_face[i]], false);
-        }
-        rdv->rd_line_pipeline(this->points[current_face[0]], false);
-#endif
+        v4 a = {
+            this->points[current_face[1]].position.x - this->points[current_face[0]].position.x,
+            this->points[current_face[1]].position.y - this->points[current_face[0]].position.y,
+            this->points[current_face[1]].position.z - this->points[current_face[0]].position.z,
+            1.0f
+        };
+
+        v4 b = {
+            this->points[current_face[2]].position.x - this->points[current_face[1]].position.x,
+            this->points[current_face[2]].position.y - this->points[current_face[1]].position.y,
+            this->points[current_face[2]].position.z - this->points[current_face[1]].position.z,
+            1.0f
+        };
+
+        v4 n = cross(a, b);
+        rdv->lighting.poly_normal = n;
+
         rdv->rd_poly_pipeline(this->points[current_face[0]], false);
         for (size_t i = 1; i < current_face.size(); ++i)
         {
@@ -1589,10 +1624,11 @@ execute()
         f32 nx = cosf(DEGREES_TO_RADIANS(ntheta)) * this->r;
         f32 ny = sinf(DEGREES_TO_RADIANS(ntheta)) * this->r;
 
+        rdv->rd_poly_pipeline({nx, ny, 0.0f, 1.0f}, false);
         rdv->rd_poly_pipeline({cx, cy, 0.0f, 1.0f}, false);
         rdv->rd_poly_pipeline({0.0f, 0.0f, this->h, 1.0f}, false);
-        rdv->rd_poly_pipeline({nx, ny, 0.0f, 1.0f}, false);
-        rdv->rd_poly_pipeline({cx, cy, 0.0f,1.0f}, true);
+        rdv->rd_poly_pipeline({0.0f, 0.0f, this->h, 1.0f}, false);
+        rdv->rd_poly_pipeline({nx, ny, 0.0f, 1.0f}, true);
 
     }
 

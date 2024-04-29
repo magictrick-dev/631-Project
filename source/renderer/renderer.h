@@ -100,7 +100,8 @@ struct light_model
     std::vector<farlight>   farlights;
     std::vector<pointlight> pointlights;
 
-    m4 light_transform_stack = m4::create_identity();
+    m4 light_transform = m4::create_identity();
+    std::vector<m4> transform_stack;
 
     v4  view_vector;
     v4  poly_normal;

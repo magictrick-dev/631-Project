@@ -145,6 +145,7 @@ struct m4
     static m4 create_zero();
     static m4 create_identity();
     static m4 create_transform(v3 t);
+    static m4 create_transformi(v3 t);
     static m4 create_scale(v3 s);
     static m4 create_scalei(v3 s);
     static m4 create_rotation(v3 r);

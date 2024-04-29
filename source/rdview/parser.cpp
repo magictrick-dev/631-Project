@@ -98,10 +98,11 @@ rd_poly_pipeline(attr_point p, bool end_flag)
     static std::vector<attr_point> vertex_list;
 
     // Compute the point and update the vertex position.
-    v4 result = this->camera_to_clip * this->world_to_camera * this->current_transform * p.position;
-    p.position = result;
+    v4 result = this->world_to_camera * this->current_transform * p.position;
     p.constant = 1.0f;
     p.world = p.position.xyz;
+
+    p.position = this->camera_to_clip * result;
 
     // Place the vertex in the list.
     vertex_list.push_back(p);

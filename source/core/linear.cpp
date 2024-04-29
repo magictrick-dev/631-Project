@@ -309,6 +309,18 @@ create_transform(v3 t)
 }
 
 m4 m4::
+create_transformi(v3 t)
+{
+
+    m4 transform = m4::create_identity();
+    transform.rows[0][3] = -t[0];
+    transform.rows[1][3] = -t[1];
+    transform.rows[2][3] = -t[2];
+    return transform;
+
+}
+
+m4 m4::
 create_rotation_z(f32 degrees)
 {
 
