@@ -1113,21 +1113,25 @@ execute()
             attr_point ap1;
             ap1.position = p1;
             ap1.normals = p1.xyz;
+            ap1.color = rdv->draw_color;
             rdv->rd_poly_pipeline(ap1, false);
 
             attr_point ap2;
             ap2.position = p2;
             ap2.normals = p2.xyz;
+            ap2.color = rdv->draw_color;
             rdv->rd_poly_pipeline(ap2, false);
 
             attr_point ap3;
             ap3.position = p3;
             ap3.normals = p3.xyz;
+            ap3.color = rdv->draw_color;
             rdv->rd_poly_pipeline(ap3, false);
 
             attr_point ap4;
             ap4.position = p4;
             ap4.normals = p4.xyz;
+            ap4.color = rdv->draw_color;
             rdv->rd_poly_pipeline(ap4, false);
 
             rdv->rd_poly_pipeline(ap1, true);

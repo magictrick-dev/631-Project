@@ -875,7 +875,8 @@ add_active_list(edge* active, i32 scan_line)
 }
 
 void
-fill_edge_pairs(renderable_device *device, edge* active, i32 scan, v3 color)
+fill_edge_pairs(renderable_device *device, edge* active, i32 scan, 
+        v3 color, light_model& lighting)
 {
 
     edge *p1, *p2;
@@ -904,12 +905,23 @@ fill_edge_pairs(renderable_device *device, edge* active, i32 scan, v3 color)
 
             while (value.position.x < endx)
             {
-            
+                
+                lighting.surface_point_values = value;
+                for (size_t i = 0; i < 16; ++i)
+                {
+                    lighting.surface_point_values.coord[i] =
+                        lighting.surface_point_values.coord[i] / 
+                        lighting.surface_point_values.constant;
+                }
+
                 v4 res = value.position;
                 res.y = scan;
 
+                v3 scolor = lighting.surface_point_values.color;
+                lighting.shader_function(scolor, lighting);
+
                 if (set_depthbuffer(res.x, scan, res.z))
-                    device->set_pixel(res.x, scan, res.z, color);
+                    device->set_pixel(res.x, scan, res.z, scolor);
                     //device->set_pixel(p.x, p.y, p.z, draw_color);       
 
                 for (size_t i = 0; i < ATTR_SIZE; ++i)
@@ -975,7 +987,8 @@ resort_active(edge *active)
 }
 
 void
-scan_convert(renderable_device *device, std::vector<attr_point>& clip_list, v3 color)
+scan_convert(renderable_device *device, std::vector<attr_point>& clip_list,
+        v3 color, light_model& lighting)
 {
 
     assert(edge_table != NULL);
@@ -995,7 +1008,7 @@ scan_convert(renderable_device *device, std::vector<attr_point>& clip_list, v3 c
 
         if (aet_head.next != NULL)
         {
-            fill_edge_pairs(device, &aet_head, scan, color);
+            fill_edge_pairs(device, &aet_head, scan, color, lighting);
             update_active(&aet_head, scan);
             resort_active(&aet_head);
         }

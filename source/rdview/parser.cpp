@@ -99,8 +99,14 @@ rd_poly_pipeline(attr_point p, bool end_flag)
 
     // Compute the point and update the vertex position.
     v4 result = this->world_to_camera * this->current_transform * p.position;
+    v4 normal = {};
+    normal.xyz = p.normals;
+    normal.w = 1.0f;
+
+    v4 resultn = this->world_to_camera * this->lighting.light_transform * normal;
     p.constant = 1.0f;
     p.world = p.position.xyz;
+    p.normals = resultn.xyz;
 
     p.position = this->camera_to_clip * result;
 
@@ -123,10 +129,10 @@ rd_poly_pipeline(attr_point p, bool end_flag)
             {
                 clip_list[i].position = this->clip_to_device * clip_list[i].position;
 
-                clip_list[i].position.x /= clip_list[i].position.w;
-                clip_list[i].position.y /= clip_list[i].position.w;
-                clip_list[i].position.z /= clip_list[i].position.w;
-                clip_list[i].position.w /= clip_list[i].position.w;
+                for (size_t x = 0; x < 16; ++x)
+                {
+                    clip_list[i].coord[x] = clip_list[i].coord[x] / clip_list[i].position.w;
+                }
 #if 0
                 std::cout << clip_list[i].position << std::endl;
 #endif
@@ -140,7 +146,9 @@ rd_poly_pipeline(attr_point p, bool end_flag)
                 set_line_dda(this->active_device, clip_list[i-1].position,
                         clip_list[i].position, this->draw_color);
 #else
-            scan_convert(this->active_device, clip_list, this->draw_color);
+            this->lighting.poly_normal = this->world_to_camera * this->lighting.light_transform
+                * this->lighting.poly_normal;
+            scan_convert(this->active_device, clip_list, this->draw_color, this->lighting);
 #endif
 
         }
