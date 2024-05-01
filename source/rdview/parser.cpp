@@ -98,17 +98,20 @@ rd_poly_pipeline(attr_point p, bool end_flag)
     static std::vector<attr_point> vertex_list;
 
     // Compute the point and update the vertex position.
-    v4 result = this->world_to_camera * this->current_transform * p.position;
+    v4 result = this->current_transform * p.position;
+
+    // Compute normal in object space.
     v4 normal = {};
     normal.xyz = p.normals;
     normal.w = 1.0f;
 
-    v4 resultn = this->world_to_camera * this->lighting.light_transform * normal;
+    v4 normal_result = homogenize(this->lighting.light_transform * normal);
     p.constant = 1.0f;
     p.world = p.position.xyz;
-    p.normals = resultn.xyz;
+    p.normals = normal_result.xyz;
 
-    p.position = this->camera_to_clip * result;
+    // Finally, go to clip space.
+    p.position = this->camera_to_clip * this->world_to_camera * result;
 
     // Place the vertex in the list.
     vertex_list.push_back(p);
@@ -124,6 +127,12 @@ rd_poly_pipeline(attr_point p, bool end_flag)
         if (poly_clip(vertex_list, clip_list))
         {
  
+            // Post poly-clip, we can now calculate global poly normal.
+            v4 gpv1 = clip_list[1].position - clip_list[0].position;
+            v4 gpv2 = clip_list[2].position - clip_list[1].position;
+            v4 pn = this->lighting.light_transform * cross(gpv1, gpv2);
+            this->lighting.poly_normal = pn;
+
             // Convert to device coordinates and homogenize.
             for (size_t i = 0; i < clip_list.size(); ++i)
             {
@@ -133,23 +142,9 @@ rd_poly_pipeline(attr_point p, bool end_flag)
                 {
                     clip_list[i].coord[x] = clip_list[i].coord[x] / clip_list[i].position.w;
                 }
-#if 0
-                std::cout << clip_list[i].position << std::endl;
-#endif
             }
-#if 0
-            // Draw the first line.
-            set_line_dda(this->active_device, clip_list[clip_list.size()-1].position,
-                    clip_list[0].position, this->draw_color);
-            // Draw the rest.
-            for (size_t i = 1; i < clip_list.size(); ++i)
-                set_line_dda(this->active_device, clip_list[i-1].position,
-                        clip_list[i].position, this->draw_color);
-#else
-            this->lighting.poly_normal = this->world_to_camera * this->lighting.light_transform
-                * this->lighting.poly_normal;
+
             scan_convert(this->active_device, clip_list, this->draw_color, this->lighting);
-#endif
 
         }
 

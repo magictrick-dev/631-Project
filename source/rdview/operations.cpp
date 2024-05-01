@@ -218,6 +218,7 @@ execute()
 
     rdview *rdv = (rdview*)this->rdview_parent;
     rdv->draw_color = this->color;
+    rdv->lighting.surface_color = this->color;
 
     return;
 
@@ -538,6 +539,8 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
     rdv->camera_eye = this->eye;
+    rdv->lighting.camera_eye.xyz = this->eye;
+    rdv->lighting.camera_eye.w = 1.0f;
 
     return;
 
@@ -667,10 +670,10 @@ execute()
     rdview *rdv = (rdview*)this->rdview_parent;
     m4 translation = m4::create_transform({this->x, this->y, this->z});
     //rdv->transform_stack.push_back(translation);
-    m4 ti = m4::create_transformi({this->x, this->y, this->z});
+    //m4 ti = m4::create_transformi({this->x, this->y, this->z});
 
     rdv->current_transform = rdv->current_transform * translation;
-    rdv->lighting.light_transform = rdv->lighting.light_transform * ti;
+    //rdv->lighting.light_transform = rdv->lighting.light_transform * ti;
 
     return;
 
@@ -716,9 +719,10 @@ execute()
     rdview *rdv = (rdview*)this->rdview_parent;
     m4 scale = m4::create_scale({this->x, this->y, this->z});
     //rdv->transform_stack.push_back(scale);
-    m4 sci = m4::create_scalei({this->x, this->y, this->z});
 
     rdv->current_transform = rdv->current_transform * scale;
+
+    m4 sci = m4::create_scalei({this->x, this->y, this->z});
     rdv->lighting.light_transform = rdv->lighting.light_transform
         * sci;
 
@@ -804,36 +808,11 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
 
-#if 0
-    // Front
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
+    rdv->lighting.vertex_color_flag = false;
+    rdv->lighting.vertex_texture_flag = false;
+    rdv->lighting.vertex_normal_flag = false;
 
-    // Left
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
 
-    // Bottom
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
-
-    // Right
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
-
-    // Top
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, true);
-#endif
-
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
     rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
@@ -1002,78 +981,25 @@ execute()
 
     
     rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.vertex_color_flag = false;
+    rdv->lighting.vertex_texture_flag = false;
+    rdv->lighting.vertex_normal_flag = true;
 
-#if 0
-    // Draw x-axis.
+    int low_step = 16;
+    int high_step = 32;
+
+    for (int i = 0; i < low_step; ++i)
     {
-        size_t step = 0;
-        f32 theta = ((f32)step / 30) * this->theta;
-        f32 x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-        f32 y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-        rdv->rd_line_pipeline({x, y, 0.0f}, true);
-        for (step = 1; step < 30; ++step)
-        {
-            theta = ((f32)step / 30) * this->theta;
-            x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-            y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-            rdv->rd_line_pipeline({x, y, 0.0f}, false);
-        }
-        theta = ((f32)step / 30) * this->theta;
-        x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-        y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-        rdv->rd_line_pipeline({x, y, 0.0f}, false);
-    }
+ 
 
-    {
-        size_t step = 0;
-        f32 theta = ((f32)step / 30) * this->theta;
-        f32 x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-        f32 y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-        rdv->rd_line_pipeline({0.0f, x, y}, true);
-        for (step = 1; step < 30; ++step)
-        {
-            theta = ((f32)step / 30) * this->theta;
-            x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-            y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-            rdv->rd_line_pipeline({0.0f, x, y}, false);
-        }
-        theta = ((f32)step / 30) * this->theta;
-        x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-        y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-        rdv->rd_line_pipeline({0.0f, x, y}, false);
-    }
+        f32 phi1 = ((f32)i / (f32)low_step) * 180.0f - 90.0f;
+        f32 phi2 = ((f32)(i+1) / (f32)low_step) * 180.0f - 90.0f;
 
-    {
-        size_t step = 0;
-        f32 theta = ((f32)step / 30) * this->theta;
-        f32 x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-        f32 y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-        rdv->rd_line_pipeline({y, 0.0f, x}, true);
-        for (step = 1; step < 30; ++step)
-        {
-            theta = ((f32)step / 30) * this->theta;
-            x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-            y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-            rdv->rd_line_pipeline({y, 0.0f, x}, false);
-        }
-        theta = ((f32)step / 30) * this->theta;
-        x = this->r * cosf(DEGREES_TO_RADIANS(theta));
-        y = this->r * sinf(DEGREES_TO_RADIANS(theta));
-        rdv->rd_line_pipeline({y, 0.0f, x}, false);
-    }
-#else
-
-
-    for (int j = 0; j <= 20; ++j)
-    {
-    
-        for (int i = 0; i <= 10; ++i)
+        for (int j = 0; j < high_step; ++j)
         {
 
-            f32 theta1 = (((f32)j)       / 20) * 360.0f;
-            f32 theta2 = (((f32)j+1)     / 20) * 360.0f;
-            f32 phi1   = ((((f32)i)      / 10) * 180.0f) - 90.0f;
-            f32 phi2   = ((((f32)i+1)    / 10) * 180.0f) - 90.0f;
+            f32 theta1 = ((f32)j / (f32)high_step) * 360.0f;
+            f32 theta2 = ((f32)(j+1) / (f32)high_step) * 360.0f;
 
             // I am DTR.
 #define     DTR(t) DEGREES_TO_RADIANS(t)            
@@ -1086,9 +1012,9 @@ execute()
             };
 
             v4 p2 = { 
-                (this->r * cos(DTR(phi2)) * cos(DTR(theta1))),
-                (this->r * cos(DTR(phi2)) * sin(DTR(theta1))),
-                (this->r * sin(DTR(phi2))),
+                (this->r * cos(DTR(phi1)) * cos(DTR(theta2))),
+                (this->r * cos(DTR(phi1)) * sin(DTR(theta2))),
+                (this->r * sin(DTR(phi1))),
                 1.0f
             };
 
@@ -1100,46 +1026,38 @@ execute()
             };
 
             v4 p4 = { 
-                (this->r * cos(DTR(phi1)) * cos(DTR(theta2))),
-                (this->r * cos(DTR(phi1)) * sin(DTR(theta2))),
-                (this->r * sin(DTR(phi1))),
+                (this->r * cos(DTR(phi2)) * cos(DTR(theta1))),
+                (this->r * cos(DTR(phi2)) * sin(DTR(theta1))),
+                (this->r * sin(DTR(phi2))),
                 1.0f
             };
-
-            rdv->lighting.vertex_color_flag = false;
-            rdv->lighting.vertex_texture_flag = false;
-            rdv->lighting.vertex_normal_flag = true;
 
             attr_point ap1;
             ap1.position = p1;
             ap1.normals = p1.xyz;
-            ap1.color = rdv->draw_color;
-            rdv->rd_poly_pipeline(ap1, false);
 
             attr_point ap2;
             ap2.position = p2;
             ap2.normals = p2.xyz;
-            ap2.color = rdv->draw_color;
-            rdv->rd_poly_pipeline(ap2, false);
 
             attr_point ap3;
             ap3.position = p3;
             ap3.normals = p3.xyz;
-            ap3.color = rdv->draw_color;
-            rdv->rd_poly_pipeline(ap3, false);
 
             attr_point ap4;
             ap4.position = p4;
             ap4.normals = p4.xyz;
-            ap4.color = rdv->draw_color;
-            rdv->rd_poly_pipeline(ap4, false);
 
-            rdv->rd_poly_pipeline(ap1, true);
+            rdv->rd_poly_pipeline(ap1, false);
+            rdv->rd_poly_pipeline(ap2, false);
+            rdv->rd_poly_pipeline(ap3, false);
+            rdv->rd_poly_pipeline(ap4, true);
+
+
 
         }
 
     }
-#endif
 
     return;
 
@@ -1197,27 +1115,24 @@ execute()
     {
         m4 rx = m4::create_rotation_x(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
-        m4 rix = m4::create_rotation_xi(this->theta);
         rdv->lighting.light_transform = rdv->lighting.light_transform
-            * rix;
+            * rx;
     }
 
     else if (this->axis == 1)
     {
         m4 rx = m4::create_rotation_y(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
-        m4 rix = m4::create_rotation_yi(this->theta);
         rdv->lighting.light_transform = rdv->lighting.light_transform
-            * rix;
+            * rx;
     }
 
     else if (this->axis == 2)
     {
         m4 rx = m4::create_rotation_z(this->theta);
         rdv->current_transform = rdv->current_transform * rx;
-        m4 rix = m4::create_rotation_zi(this->theta);
         rdv->lighting.light_transform = rdv->lighting.light_transform
-            * rix;
+            * rx;
     }
 
     else
@@ -1547,23 +1462,6 @@ execute()
 
     for (auto& current_face : this->faces)
     {
-
-        v4 a = {
-            this->points[current_face[1]].position.x - this->points[current_face[0]].position.x,
-            this->points[current_face[1]].position.y - this->points[current_face[0]].position.y,
-            this->points[current_face[1]].position.z - this->points[current_face[0]].position.z,
-            1.0f
-        };
-
-        v4 b = {
-            this->points[current_face[2]].position.x - this->points[current_face[1]].position.x,
-            this->points[current_face[2]].position.y - this->points[current_face[1]].position.y,
-            this->points[current_face[2]].position.z - this->points[current_face[1]].position.z,
-            1.0f
-        };
-
-        v4 n = cross(a, b);
-        rdv->lighting.poly_normal = n;
 
         rdv->rd_poly_pipeline(this->points[current_face[0]], false);
         for (size_t i = 1; i < current_face.size(); ++i)

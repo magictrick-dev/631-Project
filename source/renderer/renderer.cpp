@@ -906,23 +906,21 @@ fill_edge_pairs(renderable_device *device, edge* active, i32 scan,
             while (value.position.x < endx)
             {
                 
-                lighting.surface_point_values = value;
-                for (size_t i = 0; i < 16; ++i)
-                {
-                    lighting.surface_point_values.coord[i] =
-                        lighting.surface_point_values.coord[i] / 
-                        lighting.surface_point_values.constant;
-                }
-
                 v4 res = value.position;
                 res.y = scan;
 
-                v3 scolor = lighting.surface_point_values.color;
-                lighting.shader_function(scolor, lighting);
+                for (size_t i = 0; i < 16; ++i)
+                {
+                    lighting.surface_point_values.coord[i] =
+                        value.coord[i] / value.constant;
+                }
+
+
+                v3 fragment_color = {};
+                lighting.shader_function(fragment_color, lighting);
 
                 if (set_depthbuffer(res.x, scan, res.z))
-                    device->set_pixel(res.x, scan, res.z, scolor);
-                    //device->set_pixel(p.x, p.y, p.z, draw_color);       
+                    device->set_pixel(res.x, scan, res.z, fragment_color);
 
                 for (size_t i = 0; i < ATTR_SIZE; ++i)
                 {
@@ -1020,20 +1018,95 @@ scan_convert(renderable_device *device, std::vector<attr_point>& clip_list,
 
 // --- Lighting ----------------------------------------------------------------
 
+f32 clamp(f32 min, f32 max, f32 value)
+{
+    if (value <= min)
+        return min;
+    else if (value >= max)
+        return value;
+    else
+        return value;
+}
+
+void clamp_negatives(v3& v)
+{
+    if (v.x < 0.0f) v.x = 0.0f;
+    if (v.y < 0.0f) v.y = 0.0f;
+    if (v.z < 0.0f) v.z = 0.0f;
+}
+
+v3
+diffuse(v3 Cs, light_model& model)
+{
+
+    v3 N;
+    if (model.vertex_normal_flag == false)
+        N = normalize(model.poly_normal.xyz);
+    else
+        N = normalize(model.surface_point_values.normals);
+    //N = normalize(model.poly_normal.xyz);
+
+    v3 color = { 0.0f, 0.0f, 0.0f };
+    for (size_t i = 0; i < model.farlights.size(); ++i)
+    {
+
+        v3 L = normalize(model.surface_point_values.world - model.farlights[i].I);
+        v3 I = model.farlights[i].C;
+        //f32 NL = clamp(0.0f, 1.0f, dot(N, L));
+        f32 NL = dot(N, L);
+        //if (NL < 0.0f) NL = 0.0f;
+
+        color += I * NL;
+
+    }
+
+    color.r = Cs.r * model.diffuse_coefficient * color.r;
+    color.g = Cs.g * model.diffuse_coefficient * color.g;
+    color.b = Cs.b * model.diffuse_coefficient * color.b;
+    return color;
+
+}
+
+v3
+ambient(v3 Cs, light_model& model)
+{
+
+    Cs.r = model.ambient_coefficient * Cs.r * model.ambient.C.r;
+    Cs.g = model.ambient_coefficient * Cs.g * model.ambient.C.g;
+    Cs.b = model.ambient_coefficient * Cs.b * model.ambient.C.b;
+    return Cs;
+
+}
+
 void
 matte_shader(v3& color, light_model& model)
 {
 
+    v3 Cs = {};
+    if (model.vertex_color_flag == false)
+        Cs = model.surface_color;
+    else
+        Cs = model.surface_point_values.color;
+
+    v3 ambient_component = ambient(Cs, model);
+    v3 diffuse_component = diffuse(Cs, model);
+
+    color = ambient_component + diffuse_component;
+    color.r = clamp(0.0f, 1.0f, color.r);
+    color.g = clamp(0.0f, 1.0f, color.g);
+    color.b = clamp(0.0f, 1.0f, color.b);
 }
 
 void
 metal_shader(v3& color, light_model& model)
 {
-
+    v3 out = model.surface_point_values.color;
+    color = out;
 }
 
 void
 plastic_shader(v3& color, light_model& model)
 {
-    
+    v3 out = model.surface_point_values.color;
+    color = out;
 }

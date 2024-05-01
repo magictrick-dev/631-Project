@@ -10,16 +10,6 @@ struct m4;
 v4 parameterize(v4 a, v4 b, f32 t);
 v4 homogenize(v4 h);
 
-inline f32 clamp(f32 a, f32 c, f32 b)
-{
-    if (c < a)
-        return a;
-    else if (c > b)
-        return b;
-    else
-        return c;
-}
-
 // --- Vector 3D ---------------------------------------------------------------
 
 struct v3
@@ -57,6 +47,8 @@ v3 operator*(const v3& lhs, const f32& rhs);
 v3 operator*(const f32& lhs, const v3& rhs);
 v3 operator+(const v3& lhs, const v3& rhs);
 v3 operator-(const v3& lhs, const v3& rhs);
+f32 dot(const v3& a, const v3& b);
+v3 normalize(v3 a);
 
 // --- Vector 4D ---------------------------------------------------------------
 

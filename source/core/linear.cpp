@@ -88,6 +88,29 @@ operator-(const v3& lhs, const v3& rhs)
     return result;
 }
 
+f32
+dot(const v3& a, const v3& b)
+{
+    f32 r = 0.0f;
+    r += a.x * b.x;
+    r += a.y * b.y;
+    r += a.z * b.z;
+    return r;
+}
+
+v3 
+normalize(v3 v)
+{
+    v3 result = v;
+    f32 magnitude = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
+    result.x /= magnitude;
+    result.y /= magnitude;
+    result.z /= magnitude;
+    return result;
+
+}
+
+
 // --- Vector 4D ---------------------------------------------------------------
 
 f32& v4::

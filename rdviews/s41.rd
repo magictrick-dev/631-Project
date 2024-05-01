@@ -10,7 +10,7 @@ CameraEye 0 0 50
 FrameBegin 1
 WorldBegin
 
-FarLight 0 0 -1  1.0  1.0  1.0  1.0
+FarLight 0 0 -40  1.0  1.0  1.0  1.0
 
 Ka 0.0
 Kd 1.0
