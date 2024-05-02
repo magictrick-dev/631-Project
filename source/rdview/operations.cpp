@@ -985,15 +985,15 @@ execute()
     rdv->lighting.vertex_texture_flag = false;
     rdv->lighting.vertex_normal_flag = true;
 
-    int low_step = 10;
-    int high_step = 20;
+    int low_step = 16;
+    int high_step = 32;
 
     for (int i = 0; i < low_step; ++i)
     {
  
 
-        f32 phi1 = ((f32)i / (f32)low_step) * 180.0f - 90.0f;
-        f32 phi2 = ((f32)(i+1) / (f32)low_step) * 180.0f - 90.0f;
+        f32 phi1 = (((f32)i / (f32)low_step) * 180.0f) - 90.0f;
+        f32 phi2 = (((f32)(i+1) / (f32)low_step) * 180.0f) - 90.0f;
 
         for (int j = 0; j < high_step; ++j)
         {
@@ -1979,14 +1979,15 @@ parse(void *statement)
     f32 x = std::stof(stm[1]);
     f32 y = std::stof(stm[2]);
     f32 z = std::stof(stm[3]);
+
     f32 r = std::stof(stm[4]);
     f32 g = std::stof(stm[5]);
     f32 b = std::stof(stm[6]);
+
     f32 i = std::stof(stm[7]);
 
-    this->light.I = { x, y, z };
+    this->light.L = v3({ x, y, z });
     this->light.C = { r*i, g*i, b*i };
-    this->light.intensity = i;
 
     return true;
 
@@ -2036,7 +2037,6 @@ parse(void *statement)
     f32 i = std::stof(stm[4]);
 
     this->light.C = { r*i, g*i, b*i };
-    this->light.intensity = i;
 
     return true;
 
@@ -2088,9 +2088,8 @@ parse(void *statement)
     f32 b = std::stof(stm[6]);
     f32 i = std::stof(stm[7]);
 
-    this->light.P = { x, y, z };
+    this->light.L = { x, y, z };
     this->light.C = { r*i, g*i, b*i };
-    this->light.intensity = i;
 
     return true;
 

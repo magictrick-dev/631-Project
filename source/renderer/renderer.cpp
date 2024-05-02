@@ -1028,6 +1028,17 @@ f32 clamp(f32 min, f32 max, f32 value)
         return value;
 }
 
+v3 clampv(f32 min, f32 max, v3 v)
+{
+    if (v.r < min) v.r = min;
+    if (v.g < min) v.g = min;
+    if (v.b < min) v.b = min;
+    if (v.r > max) v.r = max;
+    if (v.g > max) v.g = max;
+    if (v.b > max) v.b = max;
+    return v;
+}
+
 void clamp_negatives(v3& v)
 {
     if (v.x < 0.0f) v.x = 0.0f;
@@ -1050,18 +1061,36 @@ diffuse(v3 Cs, light_model& model)
     for (size_t i = 0; i < model.farlights.size(); ++i)
     {
 
-        v3 L    = normalize(model.surface_point_values.world - model.farlights[i].I);
-        v3 I    = normalize(model.farlights[i].C);
-        f32 NL  = dot(N, L);
-        f32 NLc  = clamp(0.0f, 1.0f, NL);
+        v3  Li  = normalize(v3({}) - model.farlights[i].L);
+        v3  Ci  = model.farlights[i].C;
+        f32 NL  = dot(N, Li);
+        f32 NLc = clamp(0.0f, 1.0f, NL);
 
-        if (NL <= 0.0f) continue;
+        if (NLc <= 0.0f) continue;
 
-        color_out.r += I.r * NLc * Cs.r * model.diffuse_coefficient;
-        color_out.g += I.g * NLc * Cs.g * model.diffuse_coefficient;
-        color_out.b += I.b * NLc * Cs.b * model.diffuse_coefficient;
+        color_out.r += Ci.r * NLc * Cs.r * model.diffuse_coefficient;
+        color_out.g += Ci.g * NLc * Cs.g * model.diffuse_coefficient;
+        color_out.b += Ci.b * NLc * Cs.b * model.diffuse_coefficient;
 
     }
+
+#if 1
+    for (size_t i = 0; i < model.pointlights.size(); ++i)
+    {
+        v3 Li   = model.pointlights[i].L - model.surface_point_values.world;
+        f32 Di  = 1.0f / magnitude_squared(Li);
+        v3 Ci   = clampv(0.0f, 1.0f, model.pointlights[i].C);
+        f32 NL  = dot(N, Li);
+        f32 NLc = clamp(0.0f, 1.0f, NL);
+        if (NLc <= 0.0f) continue;
+
+        color_out.r += Ci.r * NLc * Cs.r * model.diffuse_coefficient * Di;
+        color_out.g += Ci.g * NLc * Cs.g * model.diffuse_coefficient * Di;
+        color_out.b += Ci.b * NLc * Cs.b * model.diffuse_coefficient * Di;
+
+
+    }
+#endif
 
     return color_out;
 
@@ -1093,10 +1122,11 @@ matte_shader(v3& color, light_model& model)
     v3 ambient_component = ambient(Cs, model);
     v3 diffuse_component = diffuse(Cs, model);
 
-    color = ambient_component + diffuse_component;
-    color.r = clamp(0.0f, 1.0f, color.r);
-    color.g = clamp(0.0f, 1.0f, color.g);
-    color.b = clamp(0.0f, 1.0f, color.b);
+    v3 I = ambient_component + diffuse_component;
+    I.r = clamp(0.0f, 1.0, I.r);
+    I.g = clamp(0.0f, 1.0, I.g);
+    I.b = clamp(0.0f, 1.0, I.b);
+    color = I;
 
 }
 

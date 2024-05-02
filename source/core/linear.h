@@ -50,6 +50,7 @@ v3 operator-(const v3& lhs, const v3& rhs);
 f32 dot(const v3& a, const v3& b);
 v3 normalize(v3 a);
 f32 magnitude(v3 a);
+f32 magnitude_squared(v3 a);
 
 // --- Vector 4D ---------------------------------------------------------------
 

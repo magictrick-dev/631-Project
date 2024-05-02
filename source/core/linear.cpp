@@ -117,6 +117,13 @@ magnitude(v3 v)
     return mag;
 }
 
+f32
+magnitude_squared(v3 v)
+{
+    f32 mag = (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
+    return mag;
+}
+
 // --- Vector 4D ---------------------------------------------------------------
 
 f32& v4::

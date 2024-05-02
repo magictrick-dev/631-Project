@@ -57,22 +57,19 @@ interpolate_attributed_point(attr_point a, attr_point b, f32 t)
 
 struct farlight
 {
-    v3 I;
+    v3 L;
     v3 C;
-    f32 intensity;
 };
 
 struct ambientlight
 {
     v3 C;
-    f32 intensity;
 };
 
 struct pointlight
 {
-    v3 P;
+    v3 L;
     v3 C;
-    f32 intensity;
 };
 
 struct light_model;
@@ -98,7 +95,7 @@ struct light_model
     v4 camera_eye = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // Only one ambient light, many far and point lights.
-    ambientlight ambient            = { 1.0f, 1.0f, 1.0f, 1.0f };
+    ambientlight ambient            = { 1.0f, 1.0f, 1.0f};
     std::vector<farlight>   farlights;
     std::vector<pointlight> pointlights;
 
