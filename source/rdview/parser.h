@@ -53,6 +53,9 @@
 #define RDVIEW_OPTYPE_KA            35
 #define RDVIEW_OPTYPE_KS            36
 #define RDVIEW_OPTYPE_KD            37
+#define RDVIEW_OPTYPE_SPECULAR      38
+#define RDVIEW_OPTYPE_SURFACE       39
+#define RDVIEW_OPTYPE_OPTIONBOOL    40
 
 #include <rdview/operations.h>
 #include <rdview/statement.h>

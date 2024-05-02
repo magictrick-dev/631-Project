@@ -1,0 +1,17 @@
+I = [ Ka Cs Ia ] + [ Kd Cs Sum(N.L * Id) ] + [ Ks Cspec Sum(V.R^na * Is) ]
+
+Dot-product, no negatives, skip.
+Normalize the normals and light (N & L, V & R).
+Also V.R non-negative. (N.L negative, ignore).
+
+Transform:
+World_Point = M1 M2 M3 P
+
+ObjN M3- M2- M1- = Normal_world (in assignment notes)
+
+What to do:
+Normal_world = M3-T M2-T M1-T ObjN
+Translation->   ignore
+Rotation->      same rotation
+Scale->         inverse-scale
+Create stack.

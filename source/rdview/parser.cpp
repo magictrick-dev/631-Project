@@ -99,16 +99,14 @@ rd_poly_pipeline(attr_point p, bool end_flag)
 
     // Compute the point and update the vertex position.
     v4 result = this->current_transform * p.position;
-
-    // Compute normal in object space.
-    v4 normal = {};
-    normal.xyz = p.normals;
-    normal.w = 1.0f;
-
-    v4 normal_result = this->lighting.light_transform * normal;
+    p.world = result.xyz;
     p.constant = 1.0f;
-    p.world = p.position.xyz;
-    p.normals = normal_result.xyz;
+
+    v4 normalh = {};
+    normalh.xyz = p.normals;
+    normalh.w = 1.0f;
+    normalh = homogenize(this->lighting.light_transform * normalh);
+    p.normals = normalh.xyz;
 
     // Finally, go to clip space.
     p.position = this->camera_to_clip * this->world_to_camera * result;
@@ -121,18 +119,14 @@ rd_poly_pipeline(attr_point p, bool end_flag)
         return;
     else
     {
-        
+ 
+        this->lighting.poly_normal = this->lighting.light_transform * this->lighting.poly_normal;
+
         // Clip the polygon and if there is anything there, draw it.
         std::vector<attr_point> clip_list;
         if (poly_clip(vertex_list, clip_list))
         {
  
-            // Post poly-clip, we can now calculate global poly normal.
-            v4 gpv1 = clip_list[1].position - clip_list[0].position;
-            v4 gpv2 = clip_list[2].position - clip_list[1].position;
-            v4 pn = this->lighting.light_transform * cross(gpv1, gpv2);
-            this->lighting.poly_normal = pn;
-
             // Convert to device coordinates and homogenize.
             for (size_t i = 0; i < clip_list.size(); ++i)
             {
@@ -680,7 +674,35 @@ create_operation(rdstatement *current_statement)
 
     }
 
+    else if (identifier == "Specular")
+    {
+        rdspecular *clip = new rdspecular(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_SPECULAR;
+        return clip;
 
+    }
+
+    else if (identifier == "Surface")
+    {
+        rdsurface *clip = new rdsurface(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_SURFACE;
+        return clip;
+
+    }
+
+    else if (identifier == "OptionBool")
+    {
+        rdoptionbool *clip = new rdoptionbool(this);
+        if (!clip->parse(current_statement))
+            return NULL;
+        clip->optype = RDVIEW_OPTYPE_OPTIONBOOL;
+        return clip;
+
+    }
 
     else
     {

@@ -92,7 +92,7 @@ struct light_model
     bool vertex_texture_flag        = false;
     bool vertex_interpolate_flag    = true;
 
-    v4 camera_eye = { 0.0f, 0.0f, 0.0f, 1.0f };
+    v3 camera_eye = { 0.0f, 0.0f, 0.0f };
 
     // Only one ambient light, many far and point lights.
     ambientlight ambient            = { 1.0f, 1.0f, 1.0f};

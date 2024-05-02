@@ -462,6 +462,9 @@ execute()
     // Set the current transform.
     rdv->current_transform = m4::create_identity();
 
+    // Reset the camera pos.
+    rdv->lighting.camera_eye = rdv->camera_eye;
+
     return;
 
 }
@@ -539,8 +542,7 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
     rdv->camera_eye = this->eye;
-    rdv->lighting.camera_eye.xyz = this->eye;
-    rdv->lighting.camera_eye.w = 1.0f;
+    rdv->lighting.camera_eye = this->eye;
 
     return;
 
@@ -1048,10 +1050,15 @@ execute()
             ap4.position = p4;
             ap4.normals = p4.xyz;
 
+            v4 vertex_one = ap2.position - ap1.position;
+            v4 vertex_two = ap3.position - ap2.position;
+            v4 poly_normal = cross(vertex_one, vertex_two);
+            rdv->lighting.poly_normal = poly_normal;
+
             rdv->rd_poly_pipeline(ap1, false);
-            rdv->rd_poly_pipeline(ap2, false);
+            rdv->rd_poly_pipeline(ap4, false);
             rdv->rd_poly_pipeline(ap3, false);
-            rdv->rd_poly_pipeline(ap4, true);
+            rdv->rd_poly_pipeline(ap2, true);
 
 
 
@@ -1514,6 +1521,9 @@ execute()
 
     
     rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.vertex_color_flag = false;
+    rdv->lighting.vertex_texture_flag = false;
+    rdv->lighting.vertex_normal_flag = true;
 
     for (size_t i = 0; i < 20; ++i)
     {
@@ -1526,11 +1536,22 @@ execute()
         f32 nx = cosf(DEGREES_TO_RADIANS(ntheta)) * this->r;
         f32 ny = sinf(DEGREES_TO_RADIANS(ntheta)) * this->r;
 
-        rdv->rd_poly_pipeline({nx, ny, 0.0f, 1.0f}, false);
-        rdv->rd_poly_pipeline({cx, cy, 0.0f, 1.0f}, false);
-        rdv->rd_poly_pipeline({0.0f, 0.0f, this->h, 1.0f}, false);
-        rdv->rd_poly_pipeline({0.0f, 0.0f, this->h, 1.0f}, false);
-        rdv->rd_poly_pipeline({nx, ny, 0.0f, 1.0f}, true);
+        attr_point ap1;
+        ap1.position = { cx, cy, 0.0, 1.0f };
+        ap1.normals = { cx, cy, this->r / this->h };
+
+        attr_point ap2;
+        ap2.position = { nx, ny, 0.0, 1.0f };
+        ap2.normals = { nx, ny, this->r / this->h };
+
+        attr_point ap3;
+        ap3.position = { 0.0f, 0.0f, this->h, 1.0f };
+        ap3.normals = { 0.0f, 0.0f, this->r / this->h };
+
+        rdv->rd_poly_pipeline(ap1, false);
+        rdv->rd_poly_pipeline(ap2, false);
+        rdv->rd_poly_pipeline(ap3, false);
+        rdv->rd_poly_pipeline(ap3, true);
 
     }
 
@@ -1986,7 +2007,7 @@ parse(void *statement)
 
     f32 i = std::stof(stm[7]);
 
-    this->light.L = v3({ x, y, z });
+    this->light.L = v3({}) - v3({ x, y, z });
     this->light.C = { r*i, g*i, b*i };
 
     return true;
@@ -2239,6 +2260,176 @@ execute()
 
     rdview *rdv = (rdview*)this->rdview_parent;
     rdv->lighting.diffuse_coefficient = this->Kd;
+
+    return;
+
+}
+
+// --- Specular ----------------------------------------------------------------
+//
+//
+//
+
+rdspecular::
+rdspecular(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdspecular::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 5)
+    {
+        stm.print_error("The number of arguments for specular is incorrect.");
+        return false;
+    }
+ 
+    f32 r = std::stof(stm[1]);
+    f32 g = std::stof(stm[2]);
+    f32 b = std::stof(stm[3]);
+    f32 exp = std::stof(stm[4]);
+
+    this->exponent = exp;
+    this->color = {r, g, b};
+
+    return true;
+
+}
+
+void rdspecular::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+    rdv->lighting.specular_exponent = this->exponent;
+    rdv->lighting.specular_color = this->color;
+
+    return;
+
+}
+
+// --- Surface -----------------------------------------------------------------
+//
+//
+//
+
+rdsurface::
+rdsurface(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdsurface::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 2)
+    {
+        stm.print_error("The number of arguments for surface is incorrect.");
+        return false;
+    }
+ 
+    this->surface_type = rdview_parser_keyword_dequote(stm[1]);
+
+    return true;
+
+}
+
+void rdsurface::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    if (this->surface_type == "metal")
+    {
+        rdv->lighting.shader_function = metal_shader;
+    }
+    else if (this->surface_type == "plastic")
+    {
+        rdv->lighting.shader_function = plastic_shader;
+    }
+    else if (this->surface_type == "matte")
+    {
+        rdv->lighting.shader_function = matte_shader;
+    }
+    else
+    {
+        std::cout << "Unrecognized shader surface type." << std::endl;
+        rdv->lighting.shader_function = matte_shader;
+        //assert(!"We shouldn't be here.");
+    }
+
+    return;
+
+}
+
+// --- OptionBool --------------------------------------------------------------
+//
+//
+//
+
+rdoptionbool::
+rdoptionbool(void *parent)
+{
+
+    // Set the parent.
+    this->rdview_parent = parent;
+
+}
+
+bool rdoptionbool::
+parse(void *statement)
+{
+
+    rdstatement &stm = *((rdstatement*)statement);
+
+    // Check for correct number of parameters.
+    if (stm.count() != 3)
+    {
+        stm.print_error("The number of arguments for optionbool is incorrect.");
+        return false;
+    }
+ 
+    this->flag_name = rdview_parser_keyword_dequote(stm[1]);
+    if (stm[2] == "off")
+        this->flag_value = false;
+    else
+        this->flag_value = true;
+
+    return true;
+
+}
+
+void rdoptionbool::
+execute()
+{
+
+    rdview *rdv = (rdview*)this->rdview_parent;
+
+    if (this->flag_name == "Interpolate")
+    {
+        rdv->lighting.vertex_interpolate_flag = this->flag_value;
+    }
+    else
+    {
+        std::cout << "Unrecognized option type." << std::endl;
+        //assert(!"We shouldn't be here.");
+    }
 
     return;
 

@@ -440,4 +440,36 @@ class rdks : public rdoperation
         f32 Ks;
 };
 
+class rdspecular : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdspecular(void *parent);
+
+        f32 exponent;
+        v3 color;
+};
+
+class rdsurface : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdsurface(void *parent);
+
+        std::string surface_type;
+};
+
+class rdoptionbool : public rdoperation
+{
+    public:
+        virtual void    execute();
+        virtual bool    parse(void *statement);
+                        rdoptionbool(void *parent);
+
+        std::string flag_name;
+        bool        flag_value;
+};
+
 #endif

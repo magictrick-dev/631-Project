@@ -23,7 +23,7 @@ set_in_image(u32 *spot, u32 pixel)
 {
     *spot = pixel;
 #if 1
-    for (int i = 0; i < 75000; ++i);
+    for (int i = 0; i < 25000; ++i);
 #endif
 }
 
@@ -294,6 +294,13 @@ set_fill(v3 color)
 void window_device::
 set_pixel(i32 x, i32 y, i32 z, v3 color)
 {
+
+#if 1
+    if (x == 235 && y == 229)
+    {
+        int i = 10;
+    }
+#endif
 
     u8 red          = (u8)(255 * color.r);   
     u8 green        = (u8)(255 * color.g);   

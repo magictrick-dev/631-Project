@@ -909,12 +909,12 @@ fill_edge_pairs(renderable_device *device, edge* active, i32 scan,
                 v4 res = value.position;
                 res.y = scan;
 
+                // Set surface_point_value and then normalize with constant.
+                lighting.surface_point_values = value;
                 for (size_t i = 0; i < 16; ++i)
                 {
-                    lighting.surface_point_values.coord[i] =
-                        value.coord[i] / value.constant;
+                    lighting.surface_point_values.coord[i] /= value.constant;
                 }
-
 
                 v3 fragment_color = {};
                 lighting.shader_function(fragment_color, lighting);
@@ -1050,37 +1050,35 @@ v3
 diffuse(v3 Cs, light_model& model)
 {
 
-    v3 N;
-    if (model.vertex_normal_flag == false)
-        N = normalize(model.poly_normal.xyz);
+    v3 N = {};
+    if (model.vertex_normal_flag == false || model.vertex_interpolate_flag == false)
+        N = model.poly_normal.xyz;
     else
-        N = normalize(model.surface_point_values.normals);
-    //N = normalize(model.poly_normal.xyz);
+        N = model.surface_point_values.normals;
+    N = normalize(N);
 
     v3 color_out = { 0.0f, 0.0f, 0.0f };
     for (size_t i = 0; i < model.farlights.size(); ++i)
     {
 
-        v3  Li  = normalize(v3({}) - model.farlights[i].L);
-        v3  Ci  = model.farlights[i].C;
-        f32 NL  = dot(N, Li);
-        f32 NLc = clamp(0.0f, 1.0f, NL);
+        v3 L = normalize(model.farlights[i].L);
+        f32 NL = clamp(0.0f, 1.0f, dot(N, L));
 
-        if (NLc <= 0.0f) continue;
+        if (NL < 0.0f) continue;
 
-        color_out.r += Ci.r * NLc * Cs.r * model.diffuse_coefficient;
-        color_out.g += Ci.g * NLc * Cs.g * model.diffuse_coefficient;
-        color_out.b += Ci.b * NLc * Cs.b * model.diffuse_coefficient;
+        color_out.r += NL * model.farlights[i].C.r * Cs.r * model.diffuse_coefficient;
+        color_out.g += NL * model.farlights[i].C.g * Cs.g * model.diffuse_coefficient;
+        color_out.b += NL * model.farlights[i].C.b * Cs.b * model.diffuse_coefficient;
 
     }
 
-#if 1
     for (size_t i = 0; i < model.pointlights.size(); ++i)
     {
         v3 Li   = model.pointlights[i].L - model.surface_point_values.world;
+
         f32 Di  = 1.0f / magnitude_squared(Li);
-        v3 Ci   = clampv(0.0f, 1.0f, model.pointlights[i].C);
-        f32 NL  = dot(N, Li);
+        v3 Ci   = model.pointlights[i].C;
+        f32 NL  = dot(N, normalize(Li));
         f32 NLc = clamp(0.0f, 1.0f, NL);
         if (NLc <= 0.0f) continue;
 
@@ -1090,9 +1088,83 @@ diffuse(v3 Cs, light_model& model)
 
 
     }
+
+    return color_out;
+
+}
+
+v3
+specular(v3 Cs, light_model& model)
+{
+
+    // Reflectance Function:
+    //
+    //      Ks Ci E(Ii * V.R)^ne
+    //
+    //      R = (2N.L/||N||^2)N - L
+    //
+
+    v3 N = {};
+    if (model.vertex_normal_flag == false || model.vertex_interpolate_flag == false)
+        N = model.poly_normal.xyz;
+    else
+        N = model.surface_point_values.normals;
+
+    v3 V = model.camera_eye - model.surface_point_values.world;
+
+    v3 color_out = { 0.0f, 0.0f, 0.0f };
+    for (size_t i = 0; i < model.farlights.size(); ++i)
+    {
+
+        v3 L    = normalize(model.farlights[i].L);
+        f32 NL  = clamp(0.0f, 1.0f, dot(normalize(N), normalize(L)));
+        
+        v3 R    = (2 * NL / magnitude_squared(N)) * N - L;
+        f32 VR  = clamp(0.0f, 1.0f, dot(normalize(V), normalize(R)));
+
+        if (NL <= 0.0f) continue;
+        if (VR <= 0.0f) continue;
+
+        f32 Ks = model.specular_coefficient;
+        v3 Cspec = model.specular_color;
+        v3 Is = model.farlights[i].C;
+        f32 Ne = model.specular_exponent;
+
+        color_out.r += Ks * Cs.r * powf(VR, Ne) * Is.r;
+        color_out.g += Ks * Cs.g * powf(VR, Ne) * Is.g;
+        color_out.b += Ks * Cs.b * powf(VR, Ne) * Is.b;
+
+    }
+
+#if 1
+    for (size_t i = 0; i < model.pointlights.size(); ++i)
+    {
+
+        v3 L    = model.pointlights[i].L - model.surface_point_values.world;
+        f32 Di  = 1.0f / magnitude_squared(L);
+        f32 NL  = clamp(0.0f, 1.0f, dot(normalize(N), normalize(L)));
+        
+        v3 R    = (2 * NL / magnitude_squared(N)) * N - L;
+        f32 VR  = clamp(0.0f, 1.0f, dot(normalize(V), normalize(R)));
+
+        if (NL <= 0.0f) continue;
+        if (VR <= 0.0f) continue;
+
+        f32 Ks = model.specular_coefficient;
+        v3 Cspec = model.specular_color;
+        v3 Is = model.pointlights[i].C;
+        f32 Ne = model.specular_exponent;
+
+        color_out.r += Ks * Cs.r * Di * powf(VR, Ne) * Is.r;
+        color_out.g += Ks * Cs.g * Di * powf(VR, Ne) * Is.g;
+        color_out.b += Ks * Cs.b * Di * powf(VR, Ne) * Is.b;
+
+    }
 #endif
 
     return color_out;
+
+
 
 }
 
@@ -1122,24 +1194,40 @@ matte_shader(v3& color, light_model& model)
     v3 ambient_component = ambient(Cs, model);
     v3 diffuse_component = diffuse(Cs, model);
 
-    v3 I = ambient_component + diffuse_component;
-    I.r = clamp(0.0f, 1.0, I.r);
-    I.g = clamp(0.0f, 1.0, I.g);
-    I.b = clamp(0.0f, 1.0, I.b);
-    color = I;
+    color = clampv(0.0f, 1.0f, ambient_component + diffuse_component);
 
 }
 
 void
 metal_shader(v3& color, light_model& model)
 {
-    v3 out = model.surface_point_values.color;
-    color = out;
+    v3 Cs = {};
+    if (model.vertex_color_flag == false)
+        Cs = model.surface_color;
+    else
+        Cs = model.surface_point_values.color;
+
+    v3 ambient_component = ambient(Cs, model);
+    v3 diffuse_component = diffuse(Cs, model);
+    v3 specular_component = specular(Cs, model);
+
+    color = clampv(0.0f, 1.0f, ambient_component + specular_component);
+
 }
 
 void
 plastic_shader(v3& color, light_model& model)
 {
-    v3 out = model.surface_point_values.color;
-    color = out;
+    v3 Cs = {};
+    if (model.vertex_color_flag == false)
+        Cs = model.surface_color;
+    else
+        Cs = model.surface_point_values.color;
+
+    v3 ambient_component = ambient(Cs, model);
+    v3 diffuse_component = diffuse(Cs, model);
+    v3 specular_component = specular(Cs, model);
+
+    color = clampv(0.0f, 1.0f, ambient_component + diffuse_component + specular_component);
+
 }
