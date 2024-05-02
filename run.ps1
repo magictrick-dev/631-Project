@@ -1,1 +1,1 @@
-./bin/Debug/j5.exe ./rdviews/light_test.rd
+./bin/Debug/j5.exe ./rdviews/s43.rd

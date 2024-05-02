@@ -102,14 +102,20 @@ v3
 normalize(v3 v)
 {
     v3 result = v;
-    f32 magnitude = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
-    result.x /= magnitude;
-    result.y /= magnitude;
-    result.z /= magnitude;
+    f32 mag = magnitude(v);
+    result.x /= mag;
+    result.y /= mag;
+    result.z /= mag;
     return result;
 
 }
 
+f32
+magnitude(v3 v)
+{
+    f32 mag = sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
+    return mag;
+}
 
 // --- Vector 4D ---------------------------------------------------------------
 

@@ -105,7 +105,7 @@ rd_poly_pipeline(attr_point p, bool end_flag)
     normal.xyz = p.normals;
     normal.w = 1.0f;
 
-    v4 normal_result = homogenize(this->lighting.light_transform * normal);
+    v4 normal_result = this->lighting.light_transform * normal;
     p.constant = 1.0f;
     p.world = p.position.xyz;
     p.normals = normal_result.xyz;

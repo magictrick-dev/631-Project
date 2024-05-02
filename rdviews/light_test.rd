@@ -10,16 +10,16 @@ CameraEye 0 0 50
 FrameBegin 1
 WorldBegin
 
-FarLight 0.9 0.1 -1  1.0  0.3  0.3  1.0
-AmbientLight 0.3 0.3 0.3 1.0
+FarLight -1 0 -2  1.0  0.0  0.0  1.0
+AmbientLight 1 1 1 1.0
 
-Ka 0.2
-Kd 0.8
+Ka 0.0
+Kd 1.0
 
 XformPush
-Translate -2.0 0.0 -2
-Rotate "X" 50
-Rotate "Y" 0
+Translate -1.5 0.0 -2
+Rotate "X" 30
+Rotate "Y" 20
 Sphere 1 0 1 360
 XformPop
 

@@ -295,9 +295,9 @@ void window_device::
 set_pixel(i32 x, i32 y, i32 z, v3 color)
 {
 
-    u8 red          = (u8)(255.0f * color.r);   
-    u8 green        = (u8)(255.0f * color.g);   
-    u8 blue         = (u8)(255.0f * color.b);
+    u8 red          = (u8)(255 * color.r);   
+    u8 green        = (u8)(255 * color.g);   
+    u8 blue         = (u8)(255 * color.b);
 
     //COLORREF cref = RGB(red, green, blue);
 

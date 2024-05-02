@@ -985,8 +985,8 @@ execute()
     rdv->lighting.vertex_texture_flag = false;
     rdv->lighting.vertex_normal_flag = true;
 
-    int low_step = 16;
-    int high_step = 32;
+    int low_step = 10;
+    int high_step = 20;
 
     for (int i = 0; i < low_step; ++i)
     {
