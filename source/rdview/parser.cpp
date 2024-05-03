@@ -96,6 +96,10 @@ rd_poly_pipeline(attr_point p, bool end_flag)
 
     // Maintain the list of vertices.
     static std::vector<attr_point> vertex_list;
+    static std::vector<attr_point> vtx_normals;
+
+    // We can actually just collect our attr_points as is as a seperate set.
+    vtx_normals.push_back(p);
 
     // Compute the point and update the vertex position.
     v4 result = this->current_transform * p.position;
@@ -120,7 +124,11 @@ rd_poly_pipeline(attr_point p, bool end_flag)
     else
     {
  
-        this->lighting.poly_normal = this->lighting.light_transform * this->lighting.poly_normal;
+        //this->lighting.poly_normal = this->lighting.light_transform * this->lighting.poly_normal;
+        v4 vtn1 = vtx_normals[1].position - vtx_normals[0].position;
+        v4 vtn2 = vtx_normals[2].position - vtx_normals[1].position;
+        v4 pn = this->lighting.light_transform * cross(vtn1, vtn2);
+        this->lighting.poly_normal = pn;
 
         // Clip the polygon and if there is anything there, draw it.
         std::vector<attr_point> clip_list;
@@ -144,6 +152,7 @@ rd_poly_pipeline(attr_point p, bool end_flag)
 
         // Empty the vertex list once its rendered.
         vertex_list.clear();
+        vtx_normals.clear();
     }
 
 };

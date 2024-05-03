@@ -1116,7 +1116,7 @@ specular(v3 Cs, light_model& model)
     for (size_t i = 0; i < model.farlights.size(); ++i)
     {
 
-        v3 L    = normalize(model.farlights[i].L);
+        v3 L    = model.farlights[i].L;
         f32 NL  = clamp(0.0f, 1.0f, dot(normalize(N), normalize(L)));
         
         v3 R    = (2 * NL / magnitude_squared(N)) * N - L;

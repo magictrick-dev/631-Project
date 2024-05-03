@@ -812,7 +812,7 @@ execute()
 
     rdv->lighting.vertex_color_flag = false;
     rdv->lighting.vertex_texture_flag = false;
-    rdv->lighting.vertex_normal_flag = true;
+    rdv->lighting.vertex_normal_flag = false; // cube is just a polygon.
 
     // top
     attr_point f1ap1;
@@ -1634,12 +1634,15 @@ execute()
 
         attr_point ap3;
         ap3.position = { 0.0f, 0.0f, this->h, 1.0f };
-        ap3.normals = { 0.0f, 0.0f, this->r / this->h };
+        ap3.normals = { nx, ny, this->r / this->h };
+
+        attr_point ap4 = ap3;
+        ap4.normals = { cx, cy, this->r / this->h };
 
         rdv->rd_poly_pipeline(ap1, false);
         rdv->rd_poly_pipeline(ap2, false);
         rdv->rd_poly_pipeline(ap3, false);
-        rdv->rd_poly_pipeline(ap3, true);
+        rdv->rd_poly_pipeline(ap4, true);
 
     }
 
