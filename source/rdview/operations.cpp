@@ -812,44 +812,121 @@ execute()
 
     rdv->lighting.vertex_color_flag = false;
     rdv->lighting.vertex_texture_flag = false;
-    rdv->lighting.vertex_normal_flag = false;
+    rdv->lighting.vertex_normal_flag = true;
 
+    // top
+    attr_point f1ap1;
+    attr_point f1ap2;
+    attr_point f1ap3;
+    attr_point f1ap4;
+    f1ap1.position = {1.0f, -1.0f, 1.0f, 1.0f};
+    f1ap1.normals = {0.0f, 0.0f, 1.0f};
+    f1ap2.position = {1.0f, 1.0f, 1.0f, 1.0f};
+    f1ap2.normals = {0.0f, 0.0f, 1.0f};
+    f1ap3.position = {-1.0f, 1.0f, 1.0f, 1.0f};
+    f1ap3.normals = {0.0f, 0.0f, 1.0f};
+    f1ap4.position = {-1.0f, -1.0f, 1.0f, 1.0f};
+    f1ap4.normals = {0.0f, 0.0f, 1.0f};
 
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
+    rdv->rd_poly_pipeline(f1ap1, false);
+    rdv->rd_poly_pipeline(f1ap2, false);
+    rdv->rd_poly_pipeline(f1ap3, false);
+    rdv->rd_poly_pipeline(f1ap4, true);
 
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
+    // left
+    attr_point f2ap1;
+    attr_point f2ap2;
+    attr_point f2ap3;
+    attr_point f2ap4;
+    f2ap1.position = {-1.0f, -1.0f, 1.0f, 1.0f};
+    f2ap1.normals = {-1, 0, 0 };
+    f2ap2.position = {-1.0f, 1.0f, 1.0f, 1.0f};
+    f2ap2.normals = {-1, 0, 0 };
+    f2ap3.position = {-1.0f, 1.0f, -1.0f, 1.0f};
+    f2ap2.normals = {-1, 0, 0 };
+    f2ap4.position = {-1.0f, -1.0f, -1.0f, 1.0f};
+    f2ap2.normals = {-1, 0, 0 };
+
+    rdv->rd_poly_pipeline(f2ap1, false);
+    rdv->rd_poly_pipeline(f2ap2, false);
+    rdv->rd_poly_pipeline(f2ap3, false);
+    rdv->rd_poly_pipeline(f2ap4, true);
     
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, true);
+    // right
+    attr_point f3ap1;
+    attr_point f3ap2;
+    attr_point f3ap3;
+    attr_point f3ap4;
+    f3ap1.position = {1.0f, -1.0f, 1.0f, 1.0f};
+    f3ap1.normals = {1, 0, 0};
+    f3ap2.position = {1.0f, -1.0f, -1.0f, 1.0f};
+    f3ap2.normals = {1, 0, 0};
+    f3ap3.position = {1.0f, 1.0f, -1.0f, 1.0f}; 
+    f3ap3.normals = {1, 0, 0};
+    f3ap4.position = {1.0f, 1.0f, 1.0f, 1.0f};
+    f3ap4.normals = {1, 0, 0};
 
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, 1.0f, 1.0f}, true);
+    rdv->rd_poly_pipeline(f3ap1, false);
+    rdv->rd_poly_pipeline(f3ap2, false);
+    rdv->rd_poly_pipeline(f3ap3, false);
+    rdv->rd_poly_pipeline(f3ap4, true);
 
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, 1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, 1.0f, 1.0f}, true);
+    // top
+    attr_point f4ap1;
+    attr_point f4ap2;
+    attr_point f4ap3;
+    attr_point f4ap4;
+    f4ap1.position = {1.0f, 1.0f, 1.0f, 1.0f};
+    f4ap1.normals = {0, 1, 0};
+    f4ap2.position = {1.0f, 1.0f, -1.0f, 1.0f};
+    f4ap2.normals = {0, 1, 0};
+    f4ap3.position = {-1.0f, 1.0f, -1.0f, 1.0f};
+    f4ap3.normals = {0, 1, 0};
+    f4ap4.position = {-1.0f, 1.0f, 1.0f, 1.0f};
+    f4ap4.normals = {0, 1, 0};
 
+    rdv->rd_poly_pipeline(f4ap1, false);
+    rdv->rd_poly_pipeline(f4ap2, false);
+    rdv->rd_poly_pipeline(f4ap3, false);
+    rdv->rd_poly_pipeline(f4ap4, true);
 
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, 1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({1.0f, -1.0f, -1.0f, 1.0f}, false);
-    rdv->rd_poly_pipeline({-1.0f, -1.0f, -1.0f, 1.0f}, true);
+    // bottom
+    attr_point f5ap1;
+    attr_point f5ap2;
+    attr_point f5ap3;
+    attr_point f5ap4;
+    f5ap1.position = {-1.0f, -1.0f, 1.0f, 1.0f};
+    f5ap1.normals = {0, -1, 0};
+    f5ap2.position = {-1.0f, -1.0f, -1.0f, 1.0f};
+    f5ap2.normals = {0, -1, 0};
+    f5ap3.position = {1.0f, -1.0f, -1.0f, 1.0f};
+    f5ap3.normals = {0, -1, 0};
+    f5ap4.position = {1.0f, -1.0f, 1.0f, 1.0f};
+    f5ap4.normals = {0, -1, 0};
+
+    rdv->rd_poly_pipeline(f5ap1, false);
+    rdv->rd_poly_pipeline(f5ap2, false);
+    rdv->rd_poly_pipeline(f5ap3, false);
+    rdv->rd_poly_pipeline(f5ap4, true);
+
+    // back
+    attr_point f6ap1;
+    attr_point f6ap2;
+    attr_point f6ap3;
+    attr_point f6ap4;
+    f6ap1.position = {-1.0f, -1.0f, -1.0f, 1.0f};
+    f6ap1.normals = {0, 0, -1};
+    f6ap2.position = {-1.0f, 1.0f, -1.0f, 1.0f};
+    f6ap2.normals = {0, 0, -1};
+    f6ap3.position = {1.0f, 1.0f, -1.0f, 1.0f};
+    f6ap3.normals = {0, 0, -1};
+    f6ap4.position = {1.0f, -1.0f, -1.0f, 1.0f};
+    f6ap4.normals = {0, 0, -1};
+
+    rdv->rd_poly_pipeline(f6ap1, false);
+    rdv->rd_poly_pipeline(f6ap2, false);
+    rdv->rd_poly_pipeline(f6ap3, false);
+    rdv->rd_poly_pipeline(f6ap4, true);
 
     return;
 
@@ -987,8 +1064,8 @@ execute()
     rdv->lighting.vertex_texture_flag = false;
     rdv->lighting.vertex_normal_flag = true;
 
-    int low_step = 16;
-    int high_step = 32;
+    int low_step = 48;
+    int high_step = 96;
 
     for (int i = 0; i < low_step; ++i)
     {
@@ -1467,8 +1544,19 @@ execute()
 
     rdview *rdv = (rdview*)this->rdview_parent;
 
+    rdv->lighting.vertex_color_flag = false;
+    rdv->lighting.vertex_texture_flag = false;
+    rdv->lighting.vertex_normal_flag = false;
+
     for (auto& current_face : this->faces)
     {
+
+        v4 vector_one = this->points[current_face[1]].position -
+            this->points[current_face[0]].position;
+        v4 vector_two = this->points[current_face[2]].position -
+            this->points[current_face[1]].position;
+        v4 normal = cross(vector_one, vector_two);
+        rdv->lighting.poly_normal = normal;
 
         rdv->rd_poly_pipeline(this->points[current_face[0]], false);
         for (size_t i = 1; i < current_face.size(); ++i)
@@ -1634,6 +1722,10 @@ execute()
     
     rdview *rdv = (rdview*)this->rdview_parent;
 
+    rdv->lighting.vertex_color_flag = false;
+    rdv->lighting.vertex_texture_flag = false;
+    rdv->lighting.vertex_normal_flag = true;
+
     for (size_t i = 0; i < 20; ++i)
     {
 
@@ -1645,11 +1737,31 @@ execute()
         f32 nx = this->r * cosf(DEGREES_TO_RADIANS(ntheta));
         f32 ny = this->r * sinf(DEGREES_TO_RADIANS(ntheta));
 
-        rdv->rd_poly_pipeline({cx, cy, this->zmin, 1.0f}, false); 
-        rdv->rd_poly_pipeline({nx, ny, this->zmin, 1.0f}, false); 
-        rdv->rd_poly_pipeline({nx, ny, this->zmax, 1.0f}, false); 
-        rdv->rd_poly_pipeline({cx, cy, this->zmax, 1.0f}, false); 
-        rdv->rd_poly_pipeline({cx, cy, this->zmin, 1.0f}, true); 
+        attr_point ap1;
+        ap1.position = {cx, cy, this->zmin, 1.0f};
+        ap1.normals = ap1.position.xyz;
+
+        attr_point ap2;
+        ap2.position = {nx, ny, this->zmin, 1.0f};
+        ap2.normals = ap2.position.xyz;
+
+        attr_point ap3;
+        ap3.position = {nx, ny, this->zmax, 1.0f};
+        ap3.normals = ap3.position.xyz;
+
+        attr_point ap4;
+        ap4.position = {cx, cy, this->zmax, 1.0f};
+        ap4.normals = ap4.position.xyz;
+
+        v4 vector_one = ap4.position - ap1.position;
+        v4 vector_two = ap2.position - ap1.position;
+        v4 normal = cross(vector_one, vector_two);
+        rdv->lighting.poly_normal = normal;
+
+        rdv->rd_poly_pipeline(ap1, false); 
+        rdv->rd_poly_pipeline(ap2, false); 
+        rdv->rd_poly_pipeline(ap3, false); 
+        rdv->rd_poly_pipeline(ap4, true); 
 
     }
 
@@ -1802,7 +1914,6 @@ execute()
     clear_depthbuffer();
     set_fill(rdv->active_device, rdv->canvas_color);
 
-    rdv->lighting = {}; // Reset the lighting model.
     this->operations.run();
 }
 
@@ -1840,7 +1951,7 @@ execute()
 
     
     rdview *rdv = (rdview*)this->rdview_parent;
-    Sleep(14);
+    rdv->lighting = light_model(); // Reset the lighting model.
     return;
 
 }

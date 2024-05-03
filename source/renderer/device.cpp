@@ -22,7 +22,7 @@ static inline void
 set_in_image(u32 *spot, u32 pixel)
 {
     *spot = pixel;
-#if 1
+#if 0
     for (int i = 0; i < 25000; ++i);
 #endif
 }

@@ -210,6 +210,7 @@ Line -0.975 -0.233 0  0.000  1.000 0
 XformPop
 
 Surface "plastic"
+#Surface "metal"
 Ka 0.3
 Kd 0.5
 Ks 0.5

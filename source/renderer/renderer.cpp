@@ -1130,13 +1130,12 @@ specular(v3 Cs, light_model& model)
         v3 Is = model.farlights[i].C;
         f32 Ne = model.specular_exponent;
 
-        color_out.r += Ks * Cs.r * powf(VR, Ne) * Is.r;
-        color_out.g += Ks * Cs.g * powf(VR, Ne) * Is.g;
-        color_out.b += Ks * Cs.b * powf(VR, Ne) * Is.b;
+        color_out.r += Ks * Cspec.r * powf(VR, Ne) * Is.r;
+        color_out.g += Ks * Cspec.g * powf(VR, Ne) * Is.g;
+        color_out.b += Ks * Cspec.b * powf(VR, Ne) * Is.b;
 
     }
 
-#if 1
     for (size_t i = 0; i < model.pointlights.size(); ++i)
     {
 
@@ -1144,7 +1143,7 @@ specular(v3 Cs, light_model& model)
         f32 Di  = 1.0f / magnitude_squared(L);
         f32 NL  = clamp(0.0f, 1.0f, dot(normalize(N), normalize(L)));
         
-        v3 R    = (2 * NL / magnitude_squared(N)) * N - L;
+        v3 R    = (2 * NL / magnitude_squared(N)) * N - normalize(L);
         f32 VR  = clamp(0.0f, 1.0f, dot(normalize(V), normalize(R)));
 
         if (NL <= 0.0f) continue;
@@ -1155,12 +1154,11 @@ specular(v3 Cs, light_model& model)
         v3 Is = model.pointlights[i].C;
         f32 Ne = model.specular_exponent;
 
-        color_out.r += Ks * Cs.r * Di * powf(VR, Ne) * Is.r;
-        color_out.g += Ks * Cs.g * Di * powf(VR, Ne) * Is.g;
-        color_out.b += Ks * Cs.b * Di * powf(VR, Ne) * Is.b;
+        color_out.r += Ks * Cspec.r * Di * powf(VR, Ne) * Is.r;
+        color_out.g += Ks * Cspec.g * Di * powf(VR, Ne) * Is.g;
+        color_out.b += Ks * Cspec.b * Di * powf(VR, Ne) * Is.b;
 
     }
-#endif
 
     return color_out;
 
@@ -1192,6 +1190,7 @@ matte_shader(v3& color, light_model& model)
         Cs = model.surface_point_values.color;
 
     v3 ambient_component = ambient(Cs, model);
+    v3 specular_component = specular(Cs, model);
     v3 diffuse_component = diffuse(Cs, model);
 
     color = clampv(0.0f, 1.0f, ambient_component + diffuse_component);
