@@ -7,6 +7,8 @@ Display "Interpolation"  "Screen" "rgbsingle"
 Format 640 480
 CameraFOV 5
 CameraEye 0 0 50
+#Ks 1.0
+#Surface "plastic"
 
 FrameBegin 1
 WorldBegin

@@ -1094,7 +1094,7 @@ diffuse(v3 Cs, light_model& model)
 }
 
 v3
-specular(v3 Cs, light_model& model)
+specular(v3 Cs, v3 Cspec, light_model& model)
 {
 
     // Reflectance Function:
@@ -1119,14 +1119,13 @@ specular(v3 Cs, light_model& model)
         v3 L    = model.farlights[i].L;
         f32 NL  = clamp(0.0f, 1.0f, dot(normalize(N), normalize(L)));
         
-        v3 R    = (2 * NL / magnitude_squared(N)) * N - L;
+        v3 R    = (2 * NL / magnitude_squared(N)) * normalize(N) - normalize(L);
         f32 VR  = clamp(0.0f, 1.0f, dot(normalize(V), normalize(R)));
 
         if (NL <= 0.0f) continue;
         if (VR <= 0.0f) continue;
 
         f32 Ks = model.specular_coefficient;
-        v3 Cspec = model.specular_color;
         v3 Is = model.farlights[i].C;
         f32 Ne = model.specular_exponent;
 
@@ -1143,14 +1142,13 @@ specular(v3 Cs, light_model& model)
         f32 Di  = 1.0f / magnitude_squared(L);
         f32 NL  = clamp(0.0f, 1.0f, dot(normalize(N), normalize(L)));
         
-        v3 R    = (2 * NL / magnitude_squared(N)) * N - normalize(L);
+        v3 R    = (2 * dot(N, L) / magnitude_squared(N)) * N - L;
         f32 VR  = clamp(0.0f, 1.0f, dot(normalize(V), normalize(R)));
 
         if (NL <= 0.0f) continue;
         if (VR <= 0.0f) continue;
 
         f32 Ks = model.specular_coefficient;
-        v3 Cspec = model.specular_color;
         v3 Is = model.pointlights[i].C;
         f32 Ne = model.specular_exponent;
 
@@ -1190,7 +1188,6 @@ matte_shader(v3& color, light_model& model)
         Cs = model.surface_point_values.color;
 
     v3 ambient_component = ambient(Cs, model);
-    v3 specular_component = specular(Cs, model);
     v3 diffuse_component = diffuse(Cs, model);
 
     color = clampv(0.0f, 1.0f, ambient_component + diffuse_component);
@@ -1207,8 +1204,7 @@ metal_shader(v3& color, light_model& model)
         Cs = model.surface_point_values.color;
 
     v3 ambient_component = ambient(Cs, model);
-    v3 diffuse_component = diffuse(Cs, model);
-    v3 specular_component = specular(Cs, model);
+    v3 specular_component = specular(Cs, Cs, model);
 
     color = clampv(0.0f, 1.0f, ambient_component + specular_component);
 
@@ -1217,6 +1213,7 @@ metal_shader(v3& color, light_model& model)
 void
 plastic_shader(v3& color, light_model& model)
 {
+
     v3 Cs = {};
     if (model.vertex_color_flag == false)
         Cs = model.surface_color;
@@ -1225,7 +1222,7 @@ plastic_shader(v3& color, light_model& model)
 
     v3 ambient_component = ambient(Cs, model);
     v3 diffuse_component = diffuse(Cs, model);
-    v3 specular_component = specular(Cs, model);
+    v3 specular_component = specular(Cs, model.specular_color, model);
 
     color = clampv(0.0f, 1.0f, ambient_component + diffuse_component + specular_component);
 

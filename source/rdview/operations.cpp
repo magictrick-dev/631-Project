@@ -812,21 +812,21 @@ execute()
 
     rdv->lighting.vertex_color_flag = false;
     rdv->lighting.vertex_texture_flag = false;
-    rdv->lighting.vertex_normal_flag = false; // cube is just a polygon.
+    rdv->lighting.vertex_normal_flag = true;
 
-    // top
+    // front
     attr_point f1ap1;
     attr_point f1ap2;
     attr_point f1ap3;
     attr_point f1ap4;
     f1ap1.position = {1.0f, -1.0f, 1.0f, 1.0f};
-    f1ap1.normals = {0.0f, 0.0f, 1.0f};
     f1ap2.position = {1.0f, 1.0f, 1.0f, 1.0f};
-    f1ap2.normals = {0.0f, 0.0f, 1.0f};
     f1ap3.position = {-1.0f, 1.0f, 1.0f, 1.0f};
-    f1ap3.normals = {0.0f, 0.0f, 1.0f};
     f1ap4.position = {-1.0f, -1.0f, 1.0f, 1.0f};
-    f1ap4.normals = {0.0f, 0.0f, 1.0f};
+    f1ap1.normals = {0, 0, 2};
+    f1ap2.normals = {0, 0, 2};
+    f1ap3.normals = {0, 0, 2};
+    f1ap4.normals = {0, 0, 2};
 
     rdv->rd_poly_pipeline(f1ap1, false);
     rdv->rd_poly_pipeline(f1ap2, false);
@@ -839,13 +839,13 @@ execute()
     attr_point f2ap3;
     attr_point f2ap4;
     f2ap1.position = {-1.0f, -1.0f, 1.0f, 1.0f};
-    f2ap1.normals = {-1, 0, 0 };
     f2ap2.position = {-1.0f, 1.0f, 1.0f, 1.0f};
-    f2ap2.normals = {-1, 0, 0 };
     f2ap3.position = {-1.0f, 1.0f, -1.0f, 1.0f};
-    f2ap2.normals = {-1, 0, 0 };
     f2ap4.position = {-1.0f, -1.0f, -1.0f, 1.0f};
-    f2ap2.normals = {-1, 0, 0 };
+    f2ap1.normals = {-2, 0, 0 };
+    f2ap2.normals = {-2, 0, 0 };
+    f2ap3.normals = {-2, 0, 0 };
+    f2ap4.normals = {-2, 0, 0 };
 
     rdv->rd_poly_pipeline(f2ap1, false);
     rdv->rd_poly_pipeline(f2ap2, false);
@@ -858,13 +858,13 @@ execute()
     attr_point f3ap3;
     attr_point f3ap4;
     f3ap1.position = {1.0f, -1.0f, 1.0f, 1.0f};
-    f3ap1.normals = {1, 0, 0};
     f3ap2.position = {1.0f, -1.0f, -1.0f, 1.0f};
-    f3ap2.normals = {1, 0, 0};
     f3ap3.position = {1.0f, 1.0f, -1.0f, 1.0f}; 
-    f3ap3.normals = {1, 0, 0};
     f3ap4.position = {1.0f, 1.0f, 1.0f, 1.0f};
-    f3ap4.normals = {1, 0, 0};
+    f3ap1.normals = {2, 0, 0};
+    f3ap2.normals = {2, 0, 0};
+    f3ap3.normals = {2, 0, 0};
+    f3ap4.normals = {2, 0, 0};
 
     rdv->rd_poly_pipeline(f3ap1, false);
     rdv->rd_poly_pipeline(f3ap2, false);
@@ -877,13 +877,13 @@ execute()
     attr_point f4ap3;
     attr_point f4ap4;
     f4ap1.position = {1.0f, 1.0f, 1.0f, 1.0f};
-    f4ap1.normals = {0, 1, 0};
     f4ap2.position = {1.0f, 1.0f, -1.0f, 1.0f};
-    f4ap2.normals = {0, 1, 0};
     f4ap3.position = {-1.0f, 1.0f, -1.0f, 1.0f};
-    f4ap3.normals = {0, 1, 0};
     f4ap4.position = {-1.0f, 1.0f, 1.0f, 1.0f};
-    f4ap4.normals = {0, 1, 0};
+    f4ap1.normals = {0, 2, 0};
+    f4ap2.normals = {0, 2, 0};
+    f4ap3.normals = {0, 2, 0};
+    f4ap4.normals = {0, 2, 0};
 
     rdv->rd_poly_pipeline(f4ap1, false);
     rdv->rd_poly_pipeline(f4ap2, false);
@@ -896,13 +896,13 @@ execute()
     attr_point f5ap3;
     attr_point f5ap4;
     f5ap1.position = {-1.0f, -1.0f, 1.0f, 1.0f};
-    f5ap1.normals = {0, -1, 0};
     f5ap2.position = {-1.0f, -1.0f, -1.0f, 1.0f};
-    f5ap2.normals = {0, -1, 0};
     f5ap3.position = {1.0f, -1.0f, -1.0f, 1.0f};
-    f5ap3.normals = {0, -1, 0};
     f5ap4.position = {1.0f, -1.0f, 1.0f, 1.0f};
-    f5ap4.normals = {0, -1, 0};
+    f5ap1.normals = {0, -2, 0};
+    f5ap2.normals = {0, -2, 0};
+    f5ap3.normals = {0, -2, 0};
+    f5ap4.normals = {0, -2, 0};
 
     rdv->rd_poly_pipeline(f5ap1, false);
     rdv->rd_poly_pipeline(f5ap2, false);
@@ -915,13 +915,13 @@ execute()
     attr_point f6ap3;
     attr_point f6ap4;
     f6ap1.position = {-1.0f, -1.0f, -1.0f, 1.0f};
-    f6ap1.normals = {0, 0, -1};
     f6ap2.position = {-1.0f, 1.0f, -1.0f, 1.0f};
-    f6ap2.normals = {0, 0, -1};
     f6ap3.position = {1.0f, 1.0f, -1.0f, 1.0f};
-    f6ap3.normals = {0, 0, -1};
     f6ap4.position = {1.0f, -1.0f, -1.0f, 1.0f};
-    f6ap4.normals = {0, 0, -1};
+    f6ap1.normals = {0, 0, -2};
+    f6ap2.normals = {0, 0, -2};
+    f6ap3.normals = {0, 0, -2};
+    f6ap4.normals = {0, 0, -2};
 
     rdv->rd_poly_pipeline(f6ap1, false);
     rdv->rd_poly_pipeline(f6ap2, false);
@@ -1544,12 +1544,11 @@ execute()
 
     rdview *rdv = (rdview*)this->rdview_parent;
 
-    rdv->lighting.vertex_color_flag = false;
-    rdv->lighting.vertex_texture_flag = false;
-    rdv->lighting.vertex_normal_flag = false;
-
     for (auto& current_face : this->faces)
     {
+        rdv->lighting.vertex_color_flag = false;
+        rdv->lighting.vertex_texture_flag = false;
+        rdv->lighting.vertex_normal_flag = false;
 
         v4 vector_one = this->points[current_face[1]].position -
             this->points[current_face[0]].position;

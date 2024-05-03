@@ -124,11 +124,7 @@ rd_poly_pipeline(attr_point p, bool end_flag)
     else
     {
  
-        //this->lighting.poly_normal = this->lighting.light_transform * this->lighting.poly_normal;
-        v4 vtn1 = vtx_normals[1].position - vtx_normals[0].position;
-        v4 vtn2 = vtx_normals[2].position - vtx_normals[1].position;
-        v4 pn = this->lighting.light_transform * cross(vtn1, vtn2);
-        this->lighting.poly_normal = pn;
+        this->lighting.poly_normal = this->lighting.light_transform * this->lighting.poly_normal;
 
         // Clip the polygon and if there is anything there, draw it.
         std::vector<attr_point> clip_list;

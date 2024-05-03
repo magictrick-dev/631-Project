@@ -296,7 +296,7 @@ set_pixel(i32 x, i32 y, i32 z, v3 color)
 {
 
 #if 1
-    if (x == 235 && y == 229)
+    if (x == 472 && y == 155)
     {
         int i = 10;
     }
