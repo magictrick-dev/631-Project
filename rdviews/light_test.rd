@@ -47,8 +47,8 @@ PointLight 1.1 -5.3 1    1 1 1 5.0
 AmbientLight 1 1 1 1.0
 Specular 1.0 1.0 1.0 30.0
 
-Ka 0.3
-Kd 0.6
+Ka 0.01
+Kd 0.2
 Ks 1.0
 
 XformPush

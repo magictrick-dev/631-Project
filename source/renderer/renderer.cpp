@@ -1099,7 +1099,7 @@ specular(v3 Cs, v3 Cspec, light_model& model)
 
     // Reflectance Function:
     //
-    //      Ks Ci E(Ii * V.R)^ne
+    //      Ks Ci E(V.R)^ne Ii
     //
     //      R = (2N.L/||N||^2)N - L
     //
